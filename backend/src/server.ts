@@ -4,6 +4,7 @@ import { config } from './config/environment';
 import { errorHandler } from './middlewares/errorHandler';
 import createTables from './config/migration';
 import authRoutes from './routes/authRoutes';
+import serviceRoutes from './routes/serviceRoutes';
 
 const app = express();
 
@@ -15,13 +16,14 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/api/health', (req, res) => {
     res.json({
         success: true,
-        message: '🏥 Kuaför Randevu Sistemi API çalışıyor!',
+        message: '💈 Kuaför Randevu Sistemi API çalışıyor!',
         timestamp: new Date().toISOString(),
     });
 });
 
 // ─── Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/services', serviceRoutes);
 
 // ─── Error Handler (en sonda!)
 app.use(errorHandler);
@@ -33,6 +35,7 @@ const startServer = async () => {
             console.log(`🚀 Server çalışıyor: http://localhost:${config.port}`);
             console.log(`📋 Health check: http://localhost:${config.port}/api/health`);
             console.log(`🔐 Auth API: http://localhost:${config.port}/api/auth`);
+            console.log(`💈 Service API: http://localhost:${config.port}/api/services`);
         });
     } catch (error) {
         console.error('❌ Server başlatılamadı:', error);
