@@ -5,6 +5,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import createTables from './config/migration';
 import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
+import appointmentRoutes from './routes/appointmentRoutes';
 
 const app = express();
 
@@ -24,8 +25,9 @@ app.get('/api/health', (req, res) => {
 // ─── Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
-// ─── Error Handler (en sonda!)
+// ─── Error Handler
 app.use(errorHandler);
 
 const startServer = async () => {
@@ -34,8 +36,9 @@ const startServer = async () => {
         app.listen(config.port, () => {
             console.log(`🚀 Server çalışıyor: http://localhost:${config.port}`);
             console.log(`📋 Health check: http://localhost:${config.port}/api/health`);
-            console.log(`🔐 Auth API: http://localhost:${config.port}/api/auth`);
-            console.log(`💈 Service API: http://localhost:${config.port}/api/services`);
+            console.log(`🔐 Auth: http://localhost:${config.port}/api/auth`);
+            console.log(`💈 Services: http://localhost:${config.port}/api/services`);
+            console.log(`📅 Appointments: http://localhost:${config.port}/api/appointments`);
         });
     } catch (error) {
         console.error('❌ Server başlatılamadı:', error);

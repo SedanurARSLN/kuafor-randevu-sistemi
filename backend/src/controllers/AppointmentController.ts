@@ -1,0 +1,111 @@
+import { Response, NextFunction } from 'express';
+import { AppointmentService } from '../services/AppointmentService';
+import { AuthRequest } from '../middlewares/authMiddleware';
+
+export class AppointmentController {
+    private appointmentService: AppointmentService;
+
+    constructor(appointmentService: AppointmentService) {
+        this.appointmentService = appointmentService;
+    }
+
+    // POST /api/appointments — Randevu al (müşteri)
+    create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const customerId = req.user!.userId;
+            const result = await this.appointmentService.createAppointment(customerId, req.body);
+            res.status(201).json({
+                success: true,
+                message: 'Randevu başarıyla oluşturuldu',
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // GET /api/appointments/my — Müşterinin randevuları
+    getMyAppointments = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            const role = req.user!.role;
+
+            let result;
+            if (role === 'provider') {
+                result = await this.appointmentService.getProviderAppointments(userId);
+            } else {
+                result = await this.appointmentService.getCustomerAppointments(userId);
+            }
+
+            res.status(200).json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // GET /api/appointments/:id — Randevu detayı
+    getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const id = req.params.id as string;
+            const userId = req.user!.userId;
+            const result = await this.appointmentService.getAppointmentById(id, userId);
+            res.status(200).json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // PATCH /api/appointments/:id/confirm — Onayla (kuaför)
+    confirm = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const id = req.params.id as string;
+            const providerId = req.user!.userId;
+            const result = await this.appointmentService.confirmAppointment(id, providerId);
+            res.status(200).json({
+                success: true,
+                message: 'Randevu onaylandı',
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // PATCH /api/appointments/:id/cancel — İptal
+    cancel = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const id = req.params.id as string;
+            const userId = req.user!.userId;
+            const result = await this.appointmentService.cancelAppointment(id, userId);
+            res.status(200).json({
+                success: true,
+                message: 'Randevu iptal edildi',
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // PATCH /api/appointments/:id/complete — Tamamla (kuaför)
+    complete = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const id = req.params.id as string;
+            const providerId = req.user!.userId;
+            const result = await this.appointmentService.completeAppointment(id, providerId);
+            res.status(200).json({
+                success: true,
+                message: 'Randevu tamamlandı',
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+}
