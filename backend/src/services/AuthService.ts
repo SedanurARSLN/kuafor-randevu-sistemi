@@ -11,29 +11,22 @@ import {
 } from '../models/User';
 import { AppError } from '../utils/AppError';
 
-// ─── Single Responsibility: SADECE iş mantığı (auth logic)
-// ─── Dependency Inversion: IUserRepository'e bağımlı (soyut), UserRepository'e DEĞİL
-
 export class AuthService {
     private userRepository: IUserRepository;
 
-    // Constructor Injection — SOLID: D prensibi
     constructor(userRepository: IUserRepository) {
         this.userRepository = userRepository;
     }
 
     // ─── MÜŞTERI KAYIT
     async registerCustomer(dto: RegisterCustomerDTO): Promise<AuthResponse> {
-        // 1. Email kontrolü
         const existingUser = await this.userRepository.findByEmail(dto.email);
         if (existingUser) {
             throw new AppError('Bu email zaten kayıtlı', 400);
         }
 
-        // 2. Şifreyi hashle
         const passwordHash = await bcrypt.hash(dto.password, 12);
 
-        // 3. Kullanıcı oluştur
         const user = await this.userRepository.create(
             dto.full_name,
             dto.email,
@@ -42,10 +35,8 @@ export class AuthService {
             'customer'
         );
 
-        // 4. Token oluştur
         const token = this.generateToken(user.id, user.role);
 
-        // 5. Response döndür (şifre HARİÇ)
         return {
             user: this.toUserResponse(user),
             token,
@@ -79,19 +70,16 @@ export class AuthService {
 
     // ─── GİRİŞ
     async login(dto: LoginDTO): Promise<AuthResponse> {
-        // 1. Kullanıcıyı bul
         const user = await this.userRepository.findByEmail(dto.email);
         if (!user) {
             throw new AppError('Email veya şifre hatalı', 401);
         }
 
-        // 2. Şifreyi kontrol et
         const isPasswordValid = await bcrypt.compare(dto.password, user.password_hash);
         if (!isPasswordValid) {
             throw new AppError('Email veya şifre hatalı', 401);
         }
 
-        // 3. Token oluştur
         const token = this.generateToken(user.id, user.role);
 
         return {
@@ -109,7 +97,19 @@ export class AuthService {
         return this.toUserResponse(user);
     }
 
-        // ─── YARDIMCI: JWT Token oluştur
+    // ─── TÜM KUAFÖRLERİ LİSTELE
+    async getAllProviders(): Promise<UserResponse[]> {
+        const providers = await this.userRepository.findByRole('provider');
+        return providers.map(user => this.toUserResponse(user));
+    }
+
+    // ─── KUAFÖRÜN HİZMETLERİNİ GETİR
+    async getProviderServices(providerId: string): Promise<any[]> {
+        const services = await this.userRepository.getProviderServices(providerId);
+        return services;
+    }
+
+    // ─── YARDIMCI: JWT Token oluştur
     private generateToken(userId: string, role: string): string {
         const payload = { userId, role };
         const secret = config.jwtSecret;

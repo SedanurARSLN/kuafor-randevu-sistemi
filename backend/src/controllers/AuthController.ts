@@ -2,9 +2,6 @@ import { Response, NextFunction } from 'express';
 import { AuthService } from '../services/AuthService';
 import { AuthRequest } from '../middlewares/authMiddleware';
 
-// ─── Single Responsibility: SADECE HTTP request/response yönetimi
-// ─── İş mantığı YOKTUR burada (hepsi AuthService'de)
-
 export class AuthController {
     private authService: AuthService;
 
@@ -78,6 +75,41 @@ export class AuthController {
             res.status(200).json({
                 success: true,
                 data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // GET /api/auth/providers - Tüm kuaförleri listele
+    getAllProviders = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const providers = await this.authService.getAllProviders();
+            res.status(200).json({
+                success: true,
+                data: providers,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // GET /api/auth/providers/:id/services - Kuaförün hizmetlerini getir
+    getProviderServices = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const id = req.params.id as string;
+const services = await this.authService.getProviderServices(id);
+            res.status(200).json({
+                success: true,
+                data: services,
             });
         } catch (error) {
             next(error);

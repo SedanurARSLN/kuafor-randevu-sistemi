@@ -12,8 +12,7 @@ import {
 
 const router = Router();
 
-// ─── Dependency Injection (SOLID: D prensibi)
-// Repository → Service → Controller sırasıyla enjekte ediliyor
+// ─── Dependency Injection
 const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
 const authController = new AuthController(authService);
@@ -43,6 +42,12 @@ router.post(
     validateRequest,
     authController.login
 );
+
+// Tüm kuaförleri listele
+router.get('/providers', authController.getAllProviders);
+
+// Kuaförün hizmetlerini getir
+router.get('/providers/:id/services', authController.getProviderServices);
 
 // Profil görüntüle (token gerekli)
 router.get(
