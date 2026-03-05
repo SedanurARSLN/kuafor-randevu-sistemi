@@ -34,7 +34,7 @@ export default function HomeScreen({ navigation }: any) {
 
             const handleShareLink = async () => {
     try {
-      const bookingUrl = `https://unnavigable-revengingly-donn.ngrok-free.dev/api/auth/book/${user?.id}?skip_browser_warning=true`;
+      const bookingUrl = `https://kuafor-randevu-sistemi-3shp.onrender.com/api/auth/book/${user?.id}`;
       await Share.share({
         message: bookingUrl,
       });
