@@ -12,6 +12,8 @@ import HomeScreen from '../screens/HomeScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProvidersScreen from '../screens/ProvidersScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
+import MyServicesScreen from '../screens/MyServicesScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -25,9 +27,7 @@ function AuthStack() {
   );
 }
 
-// Müşteri Tabs
 function CustomerTabs() {
-  const { logout } = useAuth();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -43,11 +43,6 @@ function CustomerTabs() {
           title: 'Ana Sayfa',
           tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
           headerTitle: '💈 Kuaför Randevu',
-          headerRight: () => (
-            <Text onPress={logout} style={{ marginRight: 16, color: COLORS.danger, fontWeight: '600' }}>
-              Çıkış
-            </Text>
-          ),
         }}
       />
       <Tab.Screen
@@ -68,13 +63,20 @@ function CustomerTabs() {
           headerTitle: '📅 Randevularım',
         }}
       />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profil',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
+          headerTitle: '👤 Profilim',
+        }}
+      />
     </Tab.Navigator>
   );
 }
 
-// Kuaför Tabs
 function ProviderTabs() {
-  const { logout } = useAuth();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -90,20 +92,33 @@ function ProviderTabs() {
           title: 'Ana Sayfa',
           tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
           headerTitle: '💈 Kuaför Paneli',
-          headerRight: () => (
-            <Text onPress={logout} style={{ marginRight: 16, color: COLORS.danger, fontWeight: '600' }}>
-              Çıkış
-            </Text>
-          ),
         }}
       />
       <Tab.Screen
         name="Appointments"
         component={AppointmentsScreen}
         options={{
-          title: 'Randevularım',
+          title: 'Randevular',
           tabBarIcon: () => <Text style={{ fontSize: 22 }}>📅</Text>,
           headerTitle: '📅 Gelen Randevular',
+        }}
+      />
+      <Tab.Screen
+        name="MyServices"
+        component={MyServicesScreen}
+        options={{
+          title: 'Hizmetlerim',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>✂️</Text>,
+          headerTitle: '✂️ Hizmetlerim',
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profil',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
+          headerTitle: '👤 Profilim',
         }}
       />
     </Tab.Navigator>
