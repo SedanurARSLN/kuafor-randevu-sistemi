@@ -28,19 +28,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>Kuaför Randevu API</h1>
-    <p>Merhaba! API çalışıyor ve aktif durumda. Lütfen uygun bir endpoint kullanın:</p>
-    <ul>
-      <li><a href="/api/health">/api/health</a> - Sağlık kontrolü</li>
-      <li>/api/auth/book/:providerId - Kuaför randevu sayfası</li>
-      <li>/api/auth/login - API ile giriş yapmak için</li>
-      <li>/api/services - Kuaför hizmetleri</li>
-    </ul>
-  `);
-});
-
+//
 
 
 
