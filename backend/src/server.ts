@@ -41,57 +41,7 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.get('/login', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Kuaför Giriş Sistemi</title>
-      <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; background: #F8FAFC; text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        button { background: #2563EB; color: white; border: none; cursor: pointer; }
-        button:hover { background: #1D4ED8; }
-      </style>
-    </head>
-    <body>
-      <h1>Kuaför Giriş Sistemi</h1>
-      <form id="loginForm">
-        <input type="email" id="email" placeholder="Email Adresiniz" required />
-        <input type="password" id="password" placeholder="Şifre" required />
-        <button type="submit">Giriş Yap</button>
-      </form>
-      <div id="output" style="margin-top: 20px; font-weight: bold;"></div>
-      <script>
-        const form = document.getElementById('loginForm');
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const email = document.getElementById('email').value;
-          const password = document.getElementById('password').value;
-          const output = document.getElementById('output');
-          try {
-            const res = await fetch('/api/auth/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, password }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-              output.textContent = 'Başarılı Giriş! Kullanıcı Rolü: ' + data.data.role;
-            } else {
-              output.textContent = 'Hata: ' + data.message;
-            }
-          } catch (err) {
-            output.textContent = 'Bağlantı hatası. Lütfen tekrar deneyin.';
-          }
-        });
-      </script>
-    </body>
-    </html>
-  `);
-});
+
 
 
 // ─── Routes
