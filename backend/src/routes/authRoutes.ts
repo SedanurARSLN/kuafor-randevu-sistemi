@@ -115,11 +115,7 @@ router.get('/book/:providerId', async (req, res) => {
                 </div>
                 <div class="form-group">
                     <label>Telefon</label>
-                    <input type="tel" id="phone" placeholder="05XX XXX XXXX" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="email" placeholder="email@ornek.com" required>
+                    <input type="tel" id="phone" placeholder="05XX XXX XX XX" maxlength="14" required oninput="formatPhone(this)">
                 </div>
             </div>
 
@@ -193,6 +189,19 @@ router.get('/book/:providerId', async (req, res) => {
         let selected = { serviceId: '', serviceName: '', price: 0, duration: 0, date: '', time: '' };
         const providerId = '${p.id}';
 
+        function formatPhone(input) {
+            let digits = input.value.replace(/\\D/g, '').slice(0, 11);
+            let formatted = digits;
+            if (digits.length > 4 && digits.length <= 7) {
+                formatted = digits.slice(0,4) + ' ' + digits.slice(4);
+            } else if (digits.length > 7 && digits.length <= 9) {
+                formatted = digits.slice(0,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+            } else if (digits.length > 9) {
+                formatted = digits.slice(0,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7,9) + ' ' + digits.slice(9,11);
+            }
+            input.value = formatted;
+        }
+
         function selectService(id, name, price, duration, el) {
             document.querySelectorAll('#servicesList .card').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
@@ -228,14 +237,14 @@ router.get('/book/:providerId', async (req, res) => {
 
         async function submitBooking() {
             const fullName = document.getElementById('fullName').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('email').value.trim();
+            const phoneRaw = document.getElementById('phone').value.trim();
+            const phone = phoneRaw.replace(/\\D/g, '');
             const notes = document.getElementById('notes').value.trim();
             const errorEl = document.getElementById('errorMsg');
             errorEl.style.display = 'none';
 
-            if (!fullName || !phone || !email) {
-                errorEl.textContent = 'Ad, telefon ve email zorunludur!';
+            if (!fullName || phone.length !== 11) {
+                errorEl.textContent = 'Ad soyad ve 11 haneli telefon numarası zorunludur!';
                 errorEl.style.display = 'block'; return;
             }
             if (!selected.serviceId || !selected.date || !selected.time) {
@@ -244,42 +253,17 @@ router.get('/book/:providerId', async (req, res) => {
             }
 
             try {
-                let token = '';
-
-                // Önce kayıt dene
-                const regRes = await fetch('/api/auth/register/customer', {
+                const res = await fetch('/api/appointments/public', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ full_name: fullName, email, phone, password: phone })
-                });
-                const regData = await regRes.json();
-                if (regData.data && regData.data.token) token = regData.data.token;
-
-                // Kayıt başarısızsa giriş dene
-                if (!token) {
-                    const loginRes = await fetch('/api/auth/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password: phone })
-                    });
-                    const loginData = await loginRes.json();
-                    if (loginData.data && loginData.data.token) token = loginData.data.token;
-                }
-
-                if (!token) {
-                    errorEl.textContent = 'Giriş yapılamadı. Bilgilerinizi kontrol edin.';
-                    errorEl.style.display = 'block'; return;
-                }
-
-                // Randevu oluştur
-                const res = await fetch('/api/appointments', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: JSON.stringify({
+                        full_name: fullName,
+                        phone: phone,
                         provider_id: providerId,
-                        service_id: selected.serviceId,
+                        service_ids: [selected.serviceId],
                         appointment_date: selected.date,
                         start_time: selected.time,
+                        total_price: selected.price,
                         notes: notes || undefined
                     })
                 });
