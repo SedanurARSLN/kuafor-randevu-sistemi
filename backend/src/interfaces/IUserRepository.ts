@@ -6,6 +6,7 @@ export interface IUserRepository {
     create(fullName: string, email: string, passwordHash: string, phone: string | undefined, role: string): Promise<User>;
     findAll(): Promise<User[]>;
     findByRole(role: string): Promise<User[]>;
+    findByPhone(phone: string): Promise<User | null>;
     getProviderServices(providerId: string): Promise<any[]>;
     update(id: string, data: Partial<User>): Promise<User | null>;
 }

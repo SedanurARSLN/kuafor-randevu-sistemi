@@ -38,6 +38,11 @@ export class UserRepository implements IUserRepository {
         return result.rows;
     }
 
+    async findByPhone(phone: string): Promise<User | null> {
+        const result = await pool.query('SELECT * FROM users WHERE phone = $1 LIMIT 1', [phone]);
+        return result.rows[0] || null;
+    }
+
     async getProviderServices(providerId: string): Promise<any[]> {
         const result = await pool.query(
             'SELECT * FROM services WHERE provider_id = $1 AND is_active = true',

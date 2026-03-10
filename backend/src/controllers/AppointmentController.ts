@@ -1,6 +1,10 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AppointmentService } from '../services/AppointmentService';
 import { AuthRequest } from '../middlewares/authMiddleware';
+import { UserRepository } from '../repositories/UserRepository';
+import bcrypt from 'bcrypt';
+
+const userRepository = new UserRepository();
 
 export class AppointmentController {
     private appointmentService: AppointmentService;
@@ -14,6 +18,43 @@ export class AppointmentController {
         try {
             const customerId = req.user!.userId;
             const result = await this.appointmentService.createAppointment(customerId, req.body);
+            res.status(201).json({
+                success: true,
+                message: 'Randevu başarıyla oluşturuldu',
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // POST /api/appointments/public — Misafir randevu (giriş yok)
+    publicCreate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { full_name, phone, ...appointmentData } = req.body;
+
+            const phoneDigits = String(phone).replace(/\D/g, '');
+
+            // Aynı telefonla daha önce oluşturulmuş müşteri varsa onu kullan
+            let customer = await userRepository.findByPhone(phoneDigits);
+
+            // Yoksa misafir müşteri oluştur
+            if (!customer) {
+                const randomPassword = Math.random().toString(36).slice(-8);
+                const passwordHash = await bcrypt.hash(randomPassword, 12);
+                const email = `guest-${phoneDigits}@guest.local`;
+
+                customer = await userRepository.create(
+                    full_name,
+                    email,
+                    passwordHash,
+                    phoneDigits,
+                    'customer'
+                );
+            }
+
+            const result = await this.appointmentService.createAppointment(customer.id, appointmentData as any);
+
             res.status(201).json({
                 success: true,
                 message: 'Randevu başarıyla oluşturuldu',
