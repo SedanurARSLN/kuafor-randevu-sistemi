@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { appointmentService } from '../services/appointmentService';
+import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES } from '../constants/theme';
 
 const TIME_SLOTS = [
@@ -15,6 +16,7 @@ const TIME_SLOTS = [
 
 export default function BookAppointmentScreen({ route, navigation }: any) {
   const { provider } = route.params;
+  const { user } = useAuth();
   const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
@@ -24,6 +26,8 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [busySlots, setBusySlots] = useState<string[]>([]);
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
 
   // Sonraki 7 günü oluştur
   const dates = Array.from({ length: 7 }, (_, i) => {
@@ -74,11 +78,34 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const getTotalDuration = () => selectedServices.reduce((sum, s) => sum + Number(s.duration_minutes), 0);
   const getTotalPrice = () => selectedServices.reduce((sum, s) => sum + Number(s.price), 0);
 
+  const handleGuestPhoneChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    let formatted = digits;
+    if (digits.length > 4 && digits.length <= 7) {
+      formatted = `${digits.slice(0, 4)} ${digits.slice(4)}`;
+    } else if (digits.length > 7 && digits.length <= 9) {
+      formatted = `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+    } else if (digits.length > 9) {
+      formatted = `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}`;
+    }
+    setGuestPhone(formatted);
+  };
+
   const handleBook = async () => {
     if (selectedServices.length === 0 || !selectedDate || !selectedTime) {
       Alert.alert('Hata', 'Lütfen en az bir hizmet, tarih ve saat seçin');
       return;
     }
+
+    // Misafir kullanıcı ise ad ve telefon zorunlu
+    if (!user) {
+      const phoneDigits = guestPhone.replace(/\D/g, '');
+      if (!guestName || phoneDigits.length !== 11) {
+        Alert.alert('Hata', 'Lütfen ad soyad ve 11 haneli telefon numarası girin');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const serviceIds = selectedServices.map((s) => s.id);
@@ -92,14 +119,31 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         total_price: totalPrice,
         notes: notes || undefined,
       });
-      await appointmentService.create({
-        provider_id: provider.id,
-        service_ids: serviceIds,
-        appointment_date: selectedDate,
-        start_time: selectedTime,
-        total_price: totalPrice,
-        notes: notes || undefined,
-      });
+
+      if (user) {
+        // Uygulama içi, giriş yapmış müşteri
+        await appointmentService.create({
+          provider_id: provider.id,
+          service_ids: serviceIds,
+          appointment_date: selectedDate,
+          start_time: selectedTime,
+          total_price: totalPrice,
+          notes: notes || undefined,
+        });
+      } else {
+        // Linkten gelen misafir kullanıcı
+        const phoneDigits = guestPhone.replace(/\D/g, '');
+        await api.post('/appointments/public', {
+          full_name: guestName,
+          phone: phoneDigits,
+          provider_id: provider.id,
+          service_ids: serviceIds,
+          appointment_date: selectedDate,
+          start_time: selectedTime,
+          total_price: totalPrice,
+          notes: notes || undefined,
+        });
+      }
       Alert.alert('Başarılı! 🎉', 'Randevunuz oluşturuldu', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);
@@ -210,6 +254,29 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         multiline
         placeholderTextColor={COLORS.gray}
       />
+
+      {/* Misafir bilgileri (giriş yoksa) */}
+      {!user && (
+        <>
+          <Text style={styles.sectionTitle}>👤 Bilgileriniz</Text>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="Ad Soyad"
+            value={guestName}
+            onChangeText={setGuestName}
+            placeholderTextColor={COLORS.gray}
+          />
+          <TextInput
+            style={styles.noteInput}
+            placeholder="05XX XXX XX XX"
+            value={guestPhone}
+            onChangeText={handleGuestPhoneChange}
+            keyboardType="phone-pad"
+            placeholderTextColor={COLORS.gray}
+            maxLength={14}
+          />
+        </>
+      )}
 
       {/* Özet & Randevu Al */}
       {selectedServices.length > 0 && selectedDate && selectedTime && (

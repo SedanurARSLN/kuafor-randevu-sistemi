@@ -8,6 +8,8 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES } from '../constants/theme';
@@ -18,8 +20,26 @@ export default function RegisterScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [role, setRole] = useState<'customer' | 'provider'>('customer');
   const [loading, setLoading] = useState(false);
+
+  // Telefonu sadece sayısal ve TR formatında (11 hane) tut
+  const handlePhoneChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11); // sadece rakam, max 11 hane
+
+    // 05xx xxx xx xx formatına çevir
+    let formatted = digits;
+    if (digits.length > 4 && digits.length <= 7) {
+      formatted = `${digits.slice(0, 4)} ${digits.slice(4)}`;
+    } else if (digits.length > 7 && digits.length <= 9) {
+      formatted = `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+    } else if (digits.length > 9) {
+      formatted = `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}`;
+    }
+
+    setPhone(formatted);
+  };
 
   const handleRegister = async () => {
     if (!fullName || !email || !phone || !password) {
@@ -27,27 +47,54 @@ export default function RegisterScreen({ navigation }: any) {
       return;
     }
 
+    if (password.length < 6) {
+      setPasswordError('Şifre en az 6 karakter olmalıdır');
+      return;
+    } else {
+      setPasswordError('');
+    }
+
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 11) {
+      Alert.alert('Hata', 'Telefon numarasını 11 haneli olarak girin');
+      return;
+    }
+
     setLoading(true);
     try {
-      await register({ full_name: fullName, email, phone, password, role });
+      await register({ full_name: fullName, email, phone: phoneDigits, password, role });
     } catch (error: any) {
       console.log('Kayıt hata detay:', error.response?.data);
-      const message = error.response?.data?.message || 'Kayıt başarısız';
-      Alert.alert('Hata', message);
+      const apiData = error.response?.data;
+      const baseMessage = apiData?.message || 'Kayıt başarısız';
+      const fieldErrors = Array.isArray(apiData?.errors)
+        ? apiData.errors.map((e: any) => `• ${e.message}`).join('\n')
+        : '';
+
+      Alert.alert('Hata', fieldErrors ? `${baseMessage}\n\n${fieldErrors}` : baseMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.header}>
-        <Text style={styles.icon}>✂️</Text>
-        <Text style={styles.title}>Kayıt Ol</Text>
-        <Text style={styles.subtitle}>Yeni hesap oluşturun</Text>
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.icon}>✂️</Text>
+          <Text style={styles.title}>Kayıt Ol</Text>
+          <Text style={styles.subtitle}>Yeni hesap oluşturun</Text>
+        </View>
 
-      <View style={styles.form}>
+        <View style={styles.form}>
         {/* Rol Seçimi */}
         <Text style={styles.label}>Hesap Türü</Text>
         <View style={styles.roleContainer}>
@@ -94,9 +141,10 @@ export default function RegisterScreen({ navigation }: any) {
           style={styles.input}
           placeholder="05XX XXX XX XX"
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={handlePhoneChange}
           keyboardType="phone-pad"
           placeholderTextColor={COLORS.gray}
+          maxLength={14} // 11 rakam + 3 boşluk (05XX XXX XX XX)
         />
 
         <Text style={styles.label}>Şifre</Text>
@@ -104,12 +152,18 @@ export default function RegisterScreen({ navigation }: any) {
           style={styles.input}
           placeholder="••••••"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            if (text.length >= 6) {
+              setPasswordError('');
+            }
+          }}
           secureTextEntry
           placeholderTextColor={COLORS.gray}
           returnKeyType="done"
           blurOnSubmit={true}
         />
+        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
@@ -123,16 +177,17 @@ export default function RegisterScreen({ navigation }: any) {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.linkText}>
-            Zaten hesabınız var mı? <Text style={styles.linkBold}>Giriş Yap</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.linkText}>
+              Zaten hesabınız var mı? <Text style={styles.linkBold}>Giriş Yap</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -240,5 +295,10 @@ const styles = StyleSheet.create({
   linkBold: {
     color: COLORS.primary,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: SIZES.sm,
+    marginTop: 4,
   },
 });
