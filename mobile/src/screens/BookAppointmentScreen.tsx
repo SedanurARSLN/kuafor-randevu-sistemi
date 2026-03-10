@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { appointmentService } from '../services/appointmentService';
+import { providerAppointmentService } from '../services/providerAppointmentService';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES } from '../constants/theme';
 
@@ -59,8 +60,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const fetchBusySlots = async () => {
     try {
       const appointments = await providerAppointmentService.getAppointmentsByDate(provider.id, selectedDate);
-      // Dolu saatleri çıkar
-      const slots = appointments.map((a: any) => a.start_time);
+      const slots = appointments.map((a: any) => a.start_time ? a.start_time.slice(0, 5) : '');
       setBusySlots(slots);
     } catch (error) {
       setBusySlots([]);
