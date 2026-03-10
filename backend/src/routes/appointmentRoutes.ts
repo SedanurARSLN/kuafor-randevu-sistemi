@@ -5,7 +5,7 @@ import { AppointmentRepository } from '../repositories/AppointmentRepository';
 import { ServiceRepository } from '../repositories/ServiceRepository';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { validateRequest } from '../middlewares/validateRequest';
-import { createAppointmentValidator, createPublicAppointmentValidator } from '../validators/appointmentValidator';
+import { createAppointmentValidator } from '../validators/appointmentValidator';
 
 const router = Router();
 
@@ -16,13 +16,8 @@ const appointmentService = new AppointmentService(appointmentRepository, service
 const appointmentController = new AppointmentController(appointmentService);
 
 // ─── ROUTES
-// Misafir: Giriş yapmadan randevu al (public)
-router.post(
-    '/public',
-    createPublicAppointmentValidator,
-    validateRequest,
-    appointmentController.publicCreate
-);
+// Misafir: Giriş yapmadan randevu al (public) — ekstra validator yok
+router.post('/public', appointmentController.publicCreate);
 
 // Kuaför ve tarih bazında randevuları getir
 router.get(
