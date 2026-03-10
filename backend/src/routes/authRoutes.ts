@@ -123,7 +123,7 @@ router.get('/book/:providerId', async (req, res) => {
                 <h2>✂️ Hizmet Seçin</h2>
                 <div id="servicesList">
                     ${svcs.map(s => `
-                        <div class="card" onclick="selectService('${s.id}', '${s.name}', ${s.price}, ${s.duration_minutes}, this)">
+                        <div class="card" onclick="toggleService('${s.id}', '${s.name}', ${s.price}, ${s.duration_minutes}, this)">
                             <h3>${s.name}</h3>
                             <div class="meta">⏱ ${s.duration_minutes} dk</div>
                             <div class="price">${s.price} TL</div>
@@ -186,7 +186,8 @@ router.get('/book/:providerId', async (req, res) => {
     </div>
 
     <script>
-        let selected = { serviceId: '', serviceName: '', price: 0, duration: 0, date: '', time: '' };
+        let selectedServices = [];
+        let selected = { date: '', time: '' };
         const providerId = '${p.id}';
 
         function formatPhone(input) {
@@ -202,11 +203,15 @@ router.get('/book/:providerId', async (req, res) => {
             input.value = formatted;
         }
 
-        function selectService(id, name, price, duration, el) {
-            document.querySelectorAll('#servicesList .card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            selected.serviceId = id; selected.serviceName = name;
-            selected.price = price; selected.duration = duration;
+        function toggleService(id, name, price, duration, el) {
+            const idx = selectedServices.findIndex(s => s.id === id);
+            if (idx > -1) {
+                selectedServices.splice(idx, 1);
+                el.classList.remove('selected');
+            } else {
+                selectedServices.push({ id, name, price, duration });
+                el.classList.add('selected');
+            }
             updateSummary();
         }
 
@@ -224,14 +229,20 @@ router.get('/book/:providerId', async (req, res) => {
             updateSummary();
         }
 
+        function getTotalPrice() {
+            return selectedServices.reduce((sum, s) => sum + Number(s.price), 0);
+        }
+
         function updateSummary() {
             const summary = document.getElementById('summary');
-            if (selected.serviceId && selected.date && selected.time) {
+            if (selectedServices.length > 0 && selected.date && selected.time) {
                 summary.style.display = 'block';
-                document.getElementById('sumService').textContent = '✂️ ' + selected.serviceName;
+                document.getElementById('sumService').innerHTML = selectedServices.map(s => '✂️ ' + s.name + ' (' + s.price + ' TL)').join('<br>');
                 document.getElementById('sumDate').textContent = '📅 ' + selected.date;
                 document.getElementById('sumTime').textContent = '🕐 ' + selected.time;
-                document.getElementById('sumPrice').textContent = '💰 ' + selected.price + ' TL';
+                document.getElementById('sumPrice').textContent = '💰 Toplam: ' + getTotalPrice() + ' TL';
+            } else {
+                summary.style.display = 'none';
             }
         }
 
@@ -247,8 +258,8 @@ router.get('/book/:providerId', async (req, res) => {
                 errorEl.textContent = 'Ad soyad ve 11 haneli telefon numarası zorunludur!';
                 errorEl.style.display = 'block'; return;
             }
-            if (!selected.serviceId || !selected.date || !selected.time) {
-                errorEl.textContent = 'Hizmet, tarih ve saat seçin!';
+            if (selectedServices.length === 0 || !selected.date || !selected.time) {
+                errorEl.textContent = 'En az bir hizmet, tarih ve saat seçin!';
                 errorEl.style.display = 'block'; return;
             }
 
@@ -260,10 +271,10 @@ router.get('/book/:providerId', async (req, res) => {
                         full_name: fullName,
                         phone: phone,
                         provider_id: providerId,
-                        service_ids: [selected.serviceId],
+                        service_ids: selectedServices.map(s => s.id),
                         appointment_date: selected.date,
                         start_time: selected.time,
-                        total_price: selected.price,
+                        total_price: getTotalPrice(),
                         notes: notes || undefined
                     })
                 });
