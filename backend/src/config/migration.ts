@@ -40,6 +40,13 @@ const createTables = async () => {
             updated_at      TIMESTAMP DEFAULT NOW()
         );
 
+        -- Şema güncellemeleri: toplam fiyat sütunu ve end_time zorunluluğunu kaldır
+        ALTER TABLE appointments 
+            ADD COLUMN IF NOT EXISTS total_price DECIMAL(10,2) NOT NULL DEFAULT 0;
+
+        ALTER TABLE appointments 
+            ALTER COLUMN end_time DROP NOT NULL;
+
         CREATE TABLE IF NOT EXISTS reviews (
             id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             appointment_id  UUID REFERENCES appointments(id) ON DELETE CASCADE,
