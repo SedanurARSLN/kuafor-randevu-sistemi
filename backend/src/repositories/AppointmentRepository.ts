@@ -48,12 +48,13 @@ export class AppointmentRepository implements IAppointmentRepository {
             SELECT 
                 a.*,
                 p.full_name as provider_name,
-                s.name as service_name,
-                s.price as total_price
+                array_agg(s.name) as service_names,
+                array_agg(s.price) as service_prices
             FROM appointments a
             JOIN users p ON a.provider_id = p.id
-            JOIN services s ON a.service_id = s.id
+            JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
             WHERE a.customer_id = $1
+            GROUP BY a.id, p.full_name
             ORDER BY a.appointment_date DESC, a.start_time DESC
         `;
         const result = await pool.query(query, [customerId]);
@@ -65,14 +66,15 @@ export class AppointmentRepository implements IAppointmentRepository {
                 SELECT 
                     a.*,
                     c.full_name as customer_name,
-                    s.name as service_name,
-                    s.price as total_price
+                    array_agg(s.name) as service_names,
+                    array_agg(s.price) as service_prices
                 FROM appointments a
                 JOIN users c ON a.customer_id = c.id
-                JOIN services s ON a.service_id = s.id
+                JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
                 WHERE a.provider_id = $1
                 AND a.appointment_date = $2
                 AND a.status NOT IN ('cancelled')
+                GROUP BY a.id, c.full_name
                 ORDER BY a.start_time ASC
             `;
             const result = await pool.query(query, [providerId, date]);
@@ -83,12 +85,13 @@ export class AppointmentRepository implements IAppointmentRepository {
             SELECT 
                 a.*,
                 c.full_name as customer_name,
-                s.name as service_name,
-                s.price as total_price
+                array_agg(s.name) as service_names,
+                array_agg(s.price) as service_prices
             FROM appointments a
             JOIN users c ON a.customer_id = c.id
-            JOIN services s ON a.service_id = s.id
+            JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
             WHERE a.provider_id = $1
+            GROUP BY a.id, c.full_name
             ORDER BY a.appointment_date ASC, a.start_time ASC
         `;
         const result = await pool.query(query, [providerId]);
