@@ -35,7 +35,7 @@ export class AppointmentRepository implements IAppointmentRepository {
             FROM appointments a
             JOIN users c ON a.customer_id = c.id
             JOIN users p ON a.provider_id = p.id
-            JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
+            JOIN services s ON s.id = ANY(string_to_array(a.service_id::text, ',')::uuid[])
             WHERE a.id = $1
             GROUP BY a.id, c.full_name, p.full_name
         `;
