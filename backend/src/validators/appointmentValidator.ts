@@ -5,9 +5,18 @@ export const createAppointmentValidator: ValidationChain[] = [
         .notEmpty()
         .withMessage('Kuaför seçimi zorunludur'),
 
+    // Hem yeni çoklu hizmet alanını (service_ids) hem de
+    // eski tekli alanı (service_id) destekle
     body('service_ids')
-        .isArray({ min: 1 })
-        .withMessage('En az bir hizmet seçilmeli'),
+        .custom((value, { req }) => {
+            if (Array.isArray(value) && value.length > 0) {
+                return true;
+            }
+            if (req.body.service_id) {
+                return true;
+            }
+            throw new Error('En az bir hizmet seçilmeli');
+        }),
 
     body('appointment_date')
         .notEmpty()

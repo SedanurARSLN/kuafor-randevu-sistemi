@@ -18,8 +18,16 @@ export class AppointmentService {
 
     // ─── RANDEVU AL
     async createAppointment(customerId: string, dto: CreateAppointmentDTO): Promise<AppointmentResponse> {
+        // service_ids (yeni) yoksa, eski tekli service_id alanından diziyi oluştur
+        const incomingServiceIds: string[] =
+            Array.isArray((dto as any).service_ids) && (dto as any).service_ids.length > 0
+                ? (dto as any).service_ids
+                : (dto as any).service_id
+                ? [(dto as any).service_id]
+                : [];
+
         // 1. Hizmetleri kontrol et
-        const services = await Promise.all(dto.service_ids.map(id => this.serviceRepository.findById(id)));
+        const services = await Promise.all(incomingServiceIds.map(id => this.serviceRepository.findById(id)));
         for (const s of services) {
             if (!s) {
                 throw new AppError('Seçilen hizmetlerden biri bulunamadı', 404);
@@ -55,7 +63,7 @@ export class AppointmentService {
         const appointment = await this.appointmentRepository.create(
             customerId,
             dto.provider_id,
-            dto.service_ids.join(','), // Çoklu hizmet için string olarak kaydedilecek
+            incomingServiceIds.join(','), // Çoklu hizmet için string olarak kaydedilecek
             dto.appointment_date,
             dto.start_time,
             totalPrice,
