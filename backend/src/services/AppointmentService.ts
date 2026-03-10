@@ -28,10 +28,13 @@ export class AppointmentService {
 
         // 1. Hizmetleri kontrol et
         const services = await Promise.all(incomingServiceIds.map(id => this.serviceRepository.findById(id)));
-        for (const s of services) {
-            if (!s) {
-                throw new AppError('Seçilen hizmetlerden biri bulunamadı', 404);
-            }
+        const validServices: Service[] = services.filter((s): s is Service => !!s);
+
+        if (validServices.length !== incomingServiceIds.length) {
+            throw new AppError('Seçilen hizmetlerden biri bulunamadı', 404);
+        }
+
+        for (const s of validServices) {
             if (!s.is_active) {
                 throw new AppError('Seçilen hizmetlerden biri aktif değil', 400);
             }
@@ -49,10 +52,15 @@ export class AppointmentService {
             throw new AppError('Geçmiş tarihe randevu alınamaz', 400);
         }
         // Toplam fiyat: Gönderilmediyse seçilen hizmetlerden hesapla
-        const totalPrice =
-            dto.total_price != null && !Number.isNaN(Number(dto.total_price))
-                ? Number(dto.total_price)
-                : services.reduce((sum, s) => sum + Number(s.price), 0);
+        let totalPrice: number;
+        if (dto.total_price != null && !Number.isNaN(Number(dto.total_price))) {
+            totalPrice = Number(dto.total_price);
+        } else {
+            totalPrice = 0;
+            for (const svc of validServices) {
+                totalPrice += Number(svc.price);
+            }
+        }
         // Çakışma kontrolü (sadece başlangıç saati ile)
         const conflicts = await this.appointmentRepository.findConflicting(
             dto.provider_id,
