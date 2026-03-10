@@ -19,10 +19,9 @@ const appointmentController = new AppointmentController(appointmentService);
 // Misafir: Giriş yapmadan randevu al (public) — ekstra validator yok
 router.post('/public', appointmentController.publicCreate);
 
-// Kuaför ve tarih bazında randevuları getir
+// Kuaför ve tarih bazında randevuları getir (public erişim - web formu için auth yok)
 router.get(
     '/provider/:providerId/date/:date',
-    authenticate,
     appointmentController.getProviderAppointmentsByDate
 );
 

@@ -81,6 +81,8 @@ router.get('/book/:providerId', async (req, res) => {
         .times { display: flex; flex-wrap: wrap; gap: 8px; }
         .time-card { padding: 10px 16px; background: white; border-radius: 12px; border: 2px solid #E2E8F0; cursor: pointer; font-weight: 600; font-size: 14px; }
         .time-card:hover, .time-card.selected { border-color: #2563EB; background: #EFF6FF; color: #2563EB; }
+        .time-card.busy { background: #F1F5F9; border-color: #CBD5E1; color: #94A3B8; text-decoration: line-through; cursor: not-allowed; opacity: 0.5; }
+        .time-card.busy:hover { background: #F1F5F9; border-color: #CBD5E1; color: #94A3B8; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 16px; background: white; }
@@ -215,10 +217,41 @@ router.get('/book/:providerId', async (req, res) => {
             updateSummary();
         }
 
+        let busySlots = [];
+
+        async function fetchBusySlots(date) {
+            try {
+                const res = await fetch('/api/appointments/provider/' + providerId + '/date/' + date);
+                const data = await res.json();
+                if (data.success && Array.isArray(data.data)) {
+                    busySlots = data.data.map(a => a.start_time ? a.start_time.slice(0,5) : '');
+                } else {
+                    busySlots = [];
+                }
+            } catch(e) {
+                busySlots = [];
+            }
+            renderTimeSlots();
+        }
+
+        function renderTimeSlots() {
+            const times = ${JSON.stringify(times)};
+            const container = document.querySelector('.times');
+            container.innerHTML = times.map(t => {
+                const isBusy = busySlots.includes(t);
+                if (isBusy) {
+                    return '<div class="time-card busy">' + t + ' ⛔</div>';
+                }
+                return '<div class="time-card" onclick="selectTime(\\'' + t + '\\', this)">' + t + '</div>';
+            }).join('');
+        }
+
         function selectDate(date, el) {
             document.querySelectorAll('.date-card').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
             selected.date = date;
+            selected.time = '';
+            fetchBusySlots(date);
             updateSummary();
         }
 
