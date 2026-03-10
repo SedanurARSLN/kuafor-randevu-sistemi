@@ -18,9 +18,10 @@ export interface Appointment {
 // ─── Randevu alırken gelen veri
 export interface CreateAppointmentDTO {
     provider_id: string;
-    service_id: string;
+    service_ids: string[];
     appointment_date: string;  // "2026-03-15"
     start_time: string;        // "14:00"
+    total_price: number;
     notes?: string;
 }
 

@@ -16,6 +16,12 @@ const appointmentService = new AppointmentService(appointmentRepository, service
 const appointmentController = new AppointmentController(appointmentService);
 
 // ─── ROUTES
+// Kuaför ve tarih bazında randevuları getir
+router.get(
+    '/provider/:providerId/date/:date',
+    authenticate,
+    appointmentController.getProviderAppointmentsByDate
+);
 
 // Müşteri: Randevu al
 router.post(

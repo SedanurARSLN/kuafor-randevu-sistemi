@@ -4,7 +4,7 @@ export interface IAppointmentRepository {
     create(
         customerId: string,
         providerId: string,
-        serviceId: string,
+        serviceIds: string,
         appointmentDate: string,
         startTime: string,
         endTime: string,
@@ -28,6 +28,8 @@ export interface IAppointmentRepository {
         endTime: string
     ): Promise<Appointment[]>;
 
+        // Belirli kuaför ve tarihteki randevular
+        findByProviderAndDate(providerId: string, date: string): Promise<any[]>;
     // Durum güncelle
     updateStatus(id: string, status: string): Promise<Appointment | null>;
 }

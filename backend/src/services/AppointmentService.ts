@@ -17,38 +17,31 @@ export class AppointmentService {
 
     // ─── RANDEVU AL
     async createAppointment(customerId: string, dto: CreateAppointmentDTO): Promise<AppointmentResponse> {
-        // 1. Hizmeti kontrol et
-        const service = await this.serviceRepository.findById(dto.service_id);
-        if (!service) {
-            throw new AppError('Hizmet bulunamadı', 404);
+        // 1. Hizmetleri kontrol et
+        const services = await Promise.all(dto.service_ids.map(id => this.serviceRepository.findById(id)));
+        if (services.some(s => !s)) {
+            throw new AppError('Seçilen hizmetlerden biri bulunamadı', 404);
         }
-        if (!service.is_active) {
-            throw new AppError('Bu hizmet şu anda aktif değil', 400);
+        if (services.some(s => !s.is_active)) {
+            throw new AppError('Seçilen hizmetlerden biri aktif değil', 400);
         }
-
-        // 2. Kuaför kontrolü — hizmet bu kuaföre ait mi?
-        if (service.provider_id !== dto.provider_id) {
-            throw new AppError('Bu hizmet bu kuaföre ait değil', 400);
+        if (services.some(s => s.provider_id !== dto.provider_id)) {
+            throw new AppError('Seçilen hizmetlerden biri bu kuaföre ait değil', 400);
         }
-
-        // 3. Kendi kendine randevu alamaz
         if (customerId === dto.provider_id) {
             throw new AppError('Kendinize randevu alamazsınız', 400);
         }
-
-        // 4. Geçmiş tarih kontrolü
         const appointmentDate = new Date(dto.appointment_date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (appointmentDate < today) {
             throw new AppError('Geçmiş tarihe randevu alınamaz', 400);
         }
-
-        // 5. Bitiş saatini hesapla
-        const durationMin = service.duration_min || (service as any).duration_minutes;
-        const endTime = this.calculateEndTime(dto.start_time, durationMin);
-
-        // 6. Çakışma kontrolü
+        // Toplam fiyat
+        const totalPrice = dto.total_price;
+        // Bitiş saatini hesapla (örnek: sabit 30 dk)
+        const endTime = this.calculateEndTime(dto.start_time, 30);
+        // Çakışma kontrolü
         const conflicts = await this.appointmentRepository.findConflicting(
             dto.provider_id,
             dto.appointment_date,
@@ -58,20 +51,17 @@ export class AppointmentService {
         if (conflicts.length > 0) {
             throw new AppError('Bu saat aralığında zaten bir randevu var', 409);
         }
-
-        // 7. Randevu oluştur
+        // Randevu oluştur
         const appointment = await this.appointmentRepository.create(
             customerId,
             dto.provider_id,
-            dto.service_id,
+            dto.service_ids.join(','), // Çoklu hizmet için string olarak kaydedilecek
             dto.appointment_date,
             dto.start_time,
             endTime,
-            parseFloat(service.price as any),
+            totalPrice,
             dto.notes
         );
-
-        // 8. Detaylı bilgi ile döndür
         const detailed = await this.appointmentRepository.findById(appointment.id);
         return detailed;
     }
@@ -101,6 +91,10 @@ export class AppointmentService {
         return appointment;
     }
 
+        // ─── BELİRLİ KUAFÖR VE TARİHTEKİ RANDEVULAR
+        async getProviderAppointmentsByDate(providerId: string, date: string): Promise<AppointmentResponse[]> {
+            return this.appointmentRepository.findByProviderAndDate(providerId, date);
+        }
     // ─── RANDEVU ONAYLA (kuaför)
     async confirmAppointment(id: string, providerId: string): Promise<AppointmentResponse> {
         const appointment = await this.appointmentRepository.findById(id);

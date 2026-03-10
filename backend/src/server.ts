@@ -44,11 +44,12 @@ const startServer = async () => {
     try {
         await createTables();
         app.listen(config.port, () => {
-            console.log(`🚀 Server çalışıyor: http://localhost:${config.port}`);
-            console.log(`📋 Health check: http://localhost:${config.port}/api/health`);
-            console.log(`🔐 Auth: http://localhost:${config.port}/api/auth`);
-            console.log(`💈 Services: http://localhost:${config.port}/api/services`);
-            console.log(`📅 Appointments: http://localhost:${config.port}/api/appointments`);
+            const baseUrl = `http://localhost:${config.port}`;
+            console.log(`🚀 Server çalışıyor: ${baseUrl}`);
+            console.log(`📋 Health check: ${baseUrl}/api/health`);
+            console.log(`🔐 Auth: ${baseUrl}/api/auth`);
+            console.log(`💈 Services: ${baseUrl}/api/services`);
+            console.log(`📅 Appointments: ${baseUrl}/api/appointments`);
         });
     } catch (error) {
         console.error('❌ Server başlatılamadı:', error);

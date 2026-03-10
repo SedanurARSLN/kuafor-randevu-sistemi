@@ -61,6 +61,20 @@ export class AppointmentController {
         }
     };
 
+    // GET /api/appointments/provider/:providerId/date/:date — Belirli kuaför ve tarihteki randevular
+    getProviderAppointmentsByDate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const providerId = req.params.providerId as string;
+            const date = req.params.date as string;
+            const appointments = await this.appointmentService.getProviderAppointmentsByDate(providerId, date);
+            res.status(200).json({
+                success: true,
+                data: appointments,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
     // PATCH /api/appointments/:id/confirm — Onayla (kuaför)
     confirm = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
