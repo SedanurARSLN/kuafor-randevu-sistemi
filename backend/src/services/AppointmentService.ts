@@ -48,8 +48,11 @@ export class AppointmentService {
         if (appointmentDate < today) {
             throw new AppError('Geçmiş tarihe randevu alınamaz', 400);
         }
-        // Toplam fiyat
-        const totalPrice = dto.total_price;
+        // Toplam fiyat: Gönderilmediyse seçilen hizmetlerden hesapla
+        const totalPrice =
+            dto.total_price != null && !Number.isNaN(Number(dto.total_price))
+                ? Number(dto.total_price)
+                : services.reduce((sum, s) => sum + Number(s.price), 0);
         // Çakışma kontrolü (sadece başlangıç saati ile)
         const conflicts = await this.appointmentRepository.findConflicting(
             dto.provider_id,
