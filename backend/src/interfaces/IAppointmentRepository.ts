@@ -7,7 +7,6 @@ export interface IAppointmentRepository {
         serviceIds: string,
         appointmentDate: string,
         startTime: string,
-        endTime: string,
         totalPrice: number,
         notes?: string
     ): Promise<Appointment>;
@@ -24,8 +23,7 @@ export interface IAppointmentRepository {
     findConflicting(
         providerId: string,
         appointmentDate: string,
-        startTime: string,
-        endTime: string
+        startTime: string
     ): Promise<Appointment[]>;
 
         // Belirli kuaför ve tarihteki randevular

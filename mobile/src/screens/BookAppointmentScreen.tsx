@@ -17,11 +17,13 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const { provider } = route.params;
   const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState<any>(null);
+  const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [busySlots, setBusySlots] = useState<string[]>([]);
 
   // Sonraki 7 günü oluştur
   const dates = Array.from({ length: 7 }, (_, i) => {
@@ -50,19 +52,52 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
     }
   };
 
+  const fetchBusySlots = async () => {
+    try {
+      const appointments = await providerAppointmentService.getAppointmentsByDate(provider.id, selectedDate);
+      // Dolu saatleri çıkar
+      const slots = appointments.map((a: any) => a.start_time);
+      setBusySlots(slots);
+    } catch (error) {
+      setBusySlots([]);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDate && provider?.id) {
+      fetchBusySlots();
+    } else {
+      setBusySlots([]);
+    }
+  }, [selectedDate, provider?.id]);
+
+  const getTotalDuration = () => selectedServices.reduce((sum, s) => sum + Number(s.duration_minutes), 0);
+  const getTotalPrice = () => selectedServices.reduce((sum, s) => sum + Number(s.price), 0);
+
   const handleBook = async () => {
-    if (!selectedService || !selectedDate || !selectedTime) {
-      Alert.alert('Hata', 'Lütfen hizmet, tarih ve saat seçin');
+    if (selectedServices.length === 0 || !selectedDate || !selectedTime) {
+      Alert.alert('Hata', 'Lütfen en az bir hizmet, tarih ve saat seçin');
       return;
     }
-
     setSubmitting(true);
     try {
-      await appointmentService.create({
+      const serviceIds = selectedServices.map((s) => s.id);
+      const totalPrice = getTotalPrice();
+      // LOG: API'ye gönderilen veriyi konsola yazdır
+      console.log({
         provider_id: provider.id,
-        service_id: selectedService.id,
+        service_ids: serviceIds,
         appointment_date: selectedDate,
         start_time: selectedTime,
+        total_price: totalPrice,
+        notes: notes || undefined,
+      });
+      await appointmentService.create({
+        provider_id: provider.id,
+        service_ids: serviceIds,
+        appointment_date: selectedDate,
+        start_time: selectedTime,
+        total_price: totalPrice,
         notes: notes || undefined,
       });
       Alert.alert('Başarılı! 🎉', 'Randevunuz oluşturuldu', [
@@ -70,7 +105,9 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       ]);
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Randevu oluşturulamadı';
-      Alert.alert('Hata', msg);
+      const details = error.response?.data?.errors;
+      Alert.alert('Hata', msg + (details ? '\n' + JSON.stringify(details) : ''));
+      console.log('Doğrulama detayları:', details);
     } finally {
       setSubmitting(false);
     }
@@ -95,32 +132,30 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       {/* Hizmet Seçimi */}
       <Text style={styles.sectionTitle}>✂️ Hizmet Seçin</Text>
       <View style={styles.grid}>
-        {services.map((service) => (
-          <TouchableOpacity
-            key={service.id}
-            style={[
-              styles.serviceCard,
-              selectedService?.id === service.id && styles.selected,
-            ]}
-            onPress={() => setSelectedService(service)}
-          >
-            <Text style={[
-              styles.serviceName,
-              selectedService?.id === service.id && styles.selectedText,
-            ]}>
-              {service.name}
-            </Text>
-            <Text style={styles.serviceDetail}>
-              ⏱ {service.duration_minutes} dk
-            </Text>
-            <Text style={[
-              styles.servicePrice,
-              selectedService?.id === service.id && styles.selectedText,
-            ]}>
-              {service.price} TL
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {services.map((service) => {
+          const isSelected = selectedServices.some((s) => s.id === service.id);
+          return (
+            <TouchableOpacity
+              key={service.id}
+              style={[styles.serviceCard, isSelected && styles.selected]}
+              onPress={() => {
+                if (isSelected) {
+                  setSelectedServices(selectedServices.filter((s) => s.id !== service.id));
+                } else {
+                  setSelectedServices([...selectedServices, service]);
+                }
+              }}
+            >
+              <Text style={[styles.serviceName, isSelected && styles.selectedText]}>
+                {service.name}
+              </Text>
+              <Text style={styles.serviceDetail}>⏱ {service.duration_minutes} dk</Text>
+              <Text style={[styles.servicePrice, isSelected && styles.selectedText]}>
+                {service.price} TL
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Tarih Seçimi */}
@@ -148,17 +183,21 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       {/* Saat Seçimi */}
       <Text style={styles.sectionTitle}>🕐 Saat Seçin</Text>
       <View style={styles.timeGrid}>
-        {TIME_SLOTS.map((time) => (
-          <TouchableOpacity
-            key={time}
-            style={[styles.timeCard, selectedTime === time && styles.selected]}
-            onPress={() => setSelectedTime(time)}
-          >
-            <Text style={[styles.timeText, selectedTime === time && styles.selectedText]}>
-              {time}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {TIME_SLOTS.map((time) => {
+          const isBusy = busySlots.includes(time);
+          return (
+            <TouchableOpacity
+              key={time}
+              style={[styles.timeCard, selectedTime === time && styles.selected, isBusy && styles.busy]}
+              onPress={() => !isBusy && setSelectedTime(time)}
+              disabled={isBusy}
+            >
+              <Text style={[styles.timeText, selectedTime === time && styles.selectedText, isBusy && styles.busyText]}>
+                {time} {isBusy ? '⛔' : ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Not */}
@@ -173,13 +212,15 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       />
 
       {/* Özet & Randevu Al */}
-      {selectedService && selectedDate && selectedTime && (
+      {selectedServices.length > 0 && selectedDate && selectedTime && (
         <View style={styles.summary}>
           <Text style={styles.summaryTitle}>📋 Özet</Text>
-          <Text style={styles.summaryText}>✂️ {selectedService.name}</Text>
+          {selectedServices.map((service) => (
+            <Text key={service.id} style={styles.summaryText}>✂️ {service.name} ({service.price} TL)</Text>
+          ))}
           <Text style={styles.summaryText}>📅 {selectedDate}</Text>
           <Text style={styles.summaryText}>🕐 {selectedTime}</Text>
-          <Text style={styles.summaryPrice}>💰 {selectedService.price} TL</Text>
+          <Text style={styles.summaryPrice}>💰 Toplam: {selectedServices.reduce((sum, s) => sum + Number(s.price), 0)} TL</Text>
         </View>
       )}
 
@@ -259,4 +300,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.7 },
   bookButtonText: { color: COLORS.white, fontSize: SIZES.xl, fontWeight: 'bold' },
+  busy: {
+    borderColor: COLORS.gray,
+    backgroundColor: '#F3F3F3',
+    opacity: 0.5,
+  },
+  busyText: {
+    color: COLORS.gray,
+    textDecorationLine: 'line-through',
+  },
 });

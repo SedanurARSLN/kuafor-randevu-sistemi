@@ -1,5 +1,6 @@
 {
   "expo": {
+    "privacy": "public",
     "name": "mobile",
     "slug": "mobile",
     "version": "1.0.0",
@@ -25,6 +26,17 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "73ade11c-0ead-4866-b6ab-288922a2d70a"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/73ade11c-0ead-4866-b6ab-288922a2d70a"
     }
   }
 }

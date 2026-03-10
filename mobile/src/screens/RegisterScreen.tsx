@@ -31,6 +31,7 @@ export default function RegisterScreen({ navigation }: any) {
     try {
       await register({ full_name: fullName, email, phone, password, role });
     } catch (error: any) {
+      console.log('Kayıt hata detay:', error.response?.data);
       const message = error.response?.data?.message || 'Kayıt başarısız';
       Alert.alert('Hata', message);
     } finally {
@@ -39,7 +40,7 @@ export default function RegisterScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <Text style={styles.icon}>✂️</Text>
         <Text style={styles.title}>Kayıt Ol</Text>
@@ -106,6 +107,8 @@ export default function RegisterScreen({ navigation }: any) {
           onChangeText={setPassword}
           secureTextEntry
           placeholderTextColor={COLORS.gray}
+          returnKeyType="done"
+          blurOnSubmit={true}
         />
 
         <TouchableOpacity

@@ -2,6 +2,7 @@ import { IAppointmentRepository } from '../interfaces/IAppointmentRepository';
 import { IServiceRepository } from '../interfaces/IServiceRepository';
 import { CreateAppointmentDTO, AppointmentResponse } from '../models/Appointment';
 import { AppError } from '../utils/AppError';
+import { Service } from '../models/Service';
 
 export class AppointmentService {
     private appointmentRepository: IAppointmentRepository;
@@ -19,14 +20,16 @@ export class AppointmentService {
     async createAppointment(customerId: string, dto: CreateAppointmentDTO): Promise<AppointmentResponse> {
         // 1. Hizmetleri kontrol et
         const services = await Promise.all(dto.service_ids.map(id => this.serviceRepository.findById(id)));
-        if (services.some(s => !s)) {
-            throw new AppError('Seçilen hizmetlerden biri bulunamadı', 404);
-        }
-        if (services.some(s => !s.is_active)) {
-            throw new AppError('Seçilen hizmetlerden biri aktif değil', 400);
-        }
-        if (services.some(s => s.provider_id !== dto.provider_id)) {
-            throw new AppError('Seçilen hizmetlerden biri bu kuaföre ait değil', 400);
+        for (const s of services) {
+            if (!s) {
+                throw new AppError('Seçilen hizmetlerden biri bulunamadı', 404);
+            }
+            if (!s.is_active) {
+                throw new AppError('Seçilen hizmetlerden biri aktif değil', 400);
+            }
+            if (s.provider_id !== dto.provider_id) {
+                throw new AppError('Seçilen hizmetlerden biri bu kuaföre ait değil', 400);
+            }
         }
         if (customerId === dto.provider_id) {
             throw new AppError('Kendinize randevu alamazsınız', 400);
@@ -39,17 +42,14 @@ export class AppointmentService {
         }
         // Toplam fiyat
         const totalPrice = dto.total_price;
-        // Bitiş saatini hesapla (örnek: sabit 30 dk)
-        const endTime = this.calculateEndTime(dto.start_time, 30);
-        // Çakışma kontrolü
+        // Çakışma kontrolü (sadece başlangıç saati ile)
         const conflicts = await this.appointmentRepository.findConflicting(
             dto.provider_id,
             dto.appointment_date,
-            dto.start_time,
-            endTime
+            dto.start_time
         );
         if (conflicts.length > 0) {
-            throw new AppError('Bu saat aralığında zaten bir randevu var', 409);
+            throw new AppError('Bu saatte zaten bir randevu var', 409);
         }
         // Randevu oluştur
         const appointment = await this.appointmentRepository.create(
@@ -58,7 +58,6 @@ export class AppointmentService {
             dto.service_ids.join(','), // Çoklu hizmet için string olarak kaydedilecek
             dto.appointment_date,
             dto.start_time,
-            endTime,
             totalPrice,
             dto.notes
         );
@@ -133,12 +132,5 @@ export class AppointmentService {
         return this.appointmentRepository.findById(id);
     }
 
-    // ─── YARDIMCI: Bitiş saati hesapla
-    private calculateEndTime(startTime: string, durationMinutes: number): string {
-        const [hours, minutes] = startTime.split(':').map(Number);
-        const totalMinutes = hours * 60 + minutes + durationMinutes;
-        const endHours = Math.floor(totalMinutes / 60);
-        const endMinutes = totalMinutes % 60;
-        return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-    }
+    // Bitiş saati fonksiyonu kaldırıldı
 }

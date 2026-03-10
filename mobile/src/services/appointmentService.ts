@@ -4,12 +4,22 @@ export const appointmentService = {
   // Randevu oluştur
   create: async (data: {
     provider_id: string;
-    service_id: string;
+    service_ids: string[];
     appointment_date: string;
     start_time: string;
     notes?: string;
+    total_price: number;
   }) => {
-    const response = await api.post('/appointments', data);
+    // Backend'in beklediği formata dönüştür
+    const payload = {
+      provider_id: data.provider_id,
+      service_ids: data.service_ids,
+      appointment_date: data.appointment_date,
+      start_time: data.start_time,
+      notes: data.notes,
+      total_price: data.total_price,
+    };
+    const response = await api.post('/appointments', payload);
     return response.data;
   },
 

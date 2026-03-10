@@ -5,11 +5,9 @@ export const createAppointmentValidator: ValidationChain[] = [
         .notEmpty()
         .withMessage('Kuaför seçimi zorunludur'),
 
-    body('service_id')
-        .optional(),
-
     body('service_ids')
-        .optional(),
+        .isArray({ min: 1 })
+        .withMessage('En az bir hizmet seçilmeli'),
 
     body('appointment_date')
         .notEmpty()

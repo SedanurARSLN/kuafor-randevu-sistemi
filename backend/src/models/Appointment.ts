@@ -4,7 +4,7 @@ export interface Appointment {
     id: string;
     customer_id: string;
     provider_id: string;
-    service_id: string;
+    // service_id kaldırıldı, sadece service_ids kullanılacak
     appointment_date: Date;
     start_time: string;
     end_time: string;
@@ -30,7 +30,7 @@ export interface AppointmentResponse {
     id: string;
     customer_id: string;
     provider_id: string;
-    service_id: string;
+    // service_id kaldırıldı, sadece service_ids kullanılacak
     appointment_date: string;
     start_time: string;
     end_time: string;

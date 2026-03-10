@@ -28,6 +28,6 @@ export const SIZES = {
   radius: 12,
 };
 
-export const API_URL = 'https://kuafor-randevu-sistemi-3shp.onrender.com/api'; // Android emulator
+export const API_URL = "https://kuafor-randevu-sistemi-3shp.onrender.com/api" // Render backend
 // Fiziksel cihaz için kendi IP'ni yaz:
-// export const API_URL = 'http://192.168.1.XX:3000/api';
+// export const API_URL = 'http://192.168.1.XX:3000/api';q

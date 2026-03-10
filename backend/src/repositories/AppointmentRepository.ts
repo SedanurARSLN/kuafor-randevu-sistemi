@@ -10,17 +10,16 @@ export class AppointmentRepository implements IAppointmentRepository {
         serviceIds: string,
         appointmentDate: string,
         startTime: string,
-        endTime: string,
         totalPrice: number,
         notes?: string
     ): Promise<Appointment> {
         const query = `
             INSERT INTO appointments 
-            (customer_id, provider_id, service_id, appointment_date, start_time, end_time, total_price, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            (customer_id, provider_id, service_id, appointment_date, start_time, total_price, notes)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
         `;
-        const values = [customerId, providerId, serviceIds, appointmentDate, startTime, endTime, totalPrice, notes || null];
+        const values = [customerId, providerId, serviceIds, appointmentDate, startTime, totalPrice, notes || null];
         const result = await pool.query(query, values);
         return result.rows[0];
     }
@@ -99,19 +98,16 @@ export class AppointmentRepository implements IAppointmentRepository {
     async findConflicting(
         providerId: string,
         appointmentDate: string,
-        startTime: string,
-        endTime: string
+        startTime: string
     ): Promise<Appointment[]> {
         const query = `
             SELECT * FROM appointments
             WHERE provider_id = $1
             AND appointment_date = $2
             AND status NOT IN ('cancelled')
-            AND (
-                (start_time < $4 AND end_time > $3)
-            )
+            AND start_time = $3
         `;
-        const result = await pool.query(query, [providerId, appointmentDate, startTime, endTime]);
+        const result = await pool.query(query, [providerId, appointmentDate, startTime]);
         return result.rows;
     }
 
