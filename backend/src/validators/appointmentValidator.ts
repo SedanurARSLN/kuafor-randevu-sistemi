@@ -23,18 +23,6 @@ export const createAppointmentValidator: ValidationChain[] = [
 
 // Misafir (giriş yapmadan) randevu için doğrulama
 export const createPublicAppointmentValidator: ValidationChain[] = [
-    body('full_name')
-        .notEmpty()
-        .withMessage('Ad soyad zorunludur')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('Ad soyad 2-100 karakter arasında olmalıdır'),
-
-    body('phone')
-        .notEmpty()
-        .withMessage('Telefon zorunludur')
-        .isMobilePhone('tr-TR')
-        .withMessage('Geçerli bir telefon numarası giriniz'),
-
     body('provider_id')
         .notEmpty()
         .withMessage('Kuaför seçimi zorunludur'),
@@ -52,6 +40,7 @@ export const createPublicAppointmentValidator: ValidationChain[] = [
         .withMessage('Saat zorunludur'),
 
     body('total_price')
+        .optional()
         .isNumeric()
         .withMessage('Toplam fiyat sayısal olmalıdır'),
 

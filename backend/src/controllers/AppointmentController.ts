@@ -33,22 +33,25 @@ export class AppointmentController {
         try {
             const { full_name, phone, ...appointmentData } = req.body;
 
-            const phoneDigits = String(phone).replace(/\D/g, '');
+            const safeName = (full_name && String(full_name).trim()) || 'Misafir Müşteri';
+            const phoneDigits = phone ? String(phone).replace(/\D/g, '') : '';
 
-            // Aynı telefonla daha önce oluşturulmuş müşteri varsa onu kullan
-            let customer = await userRepository.findByPhone(phoneDigits);
+            // Aynı telefonla daha önce oluşturulmuş müşteri varsa onu kullan (telefon geldiyse)
+            let customer = phoneDigits ? await userRepository.findByPhone(phoneDigits) : null;
 
             // Yoksa misafir müşteri oluştur
             if (!customer) {
                 const randomPassword = Math.random().toString(36).slice(-8);
                 const passwordHash = await bcrypt.hash(randomPassword, 12);
-                const email = `guest-${phoneDigits}@guest.local`;
+                const email = phoneDigits
+                    ? `guest-${phoneDigits}@guest.local`
+                    : `guest-${Date.now()}@guest.local`;
 
                 customer = await userRepository.create(
-                    full_name,
+                    safeName,
                     email,
                     passwordHash,
-                    phoneDigits,
+                    phoneDigits || undefined,
                     'customer'
                 );
             }
