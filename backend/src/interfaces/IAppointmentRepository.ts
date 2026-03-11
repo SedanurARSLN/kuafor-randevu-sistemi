@@ -28,6 +28,13 @@ export interface IAppointmentRepository {
 
         // Belirli kuaför ve tarihteki randevular
         findByProviderAndDate(providerId: string, date: string): Promise<any[]>;
+    // Kuaförün kazanç istatistikleri
+    getProviderEarnings(providerId: string): Promise<{
+        daily: { total: number; count: number };
+        weekly: { total: number; count: number };
+        monthly: { total: number; count: number };
+    }>;
+
     // Durum güncelle
     updateStatus(id: string, status: string): Promise<Appointment | null>;
 }

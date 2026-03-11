@@ -153,6 +153,20 @@ export class AppointmentController {
         }
     };
 
+    // GET /api/appointments/earnings — Kuaför kazanç istatistikleri
+    getEarnings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const providerId = req.user!.userId;
+            const result = await this.appointmentService.getProviderEarnings(providerId);
+            res.status(200).json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     // PATCH /api/appointments/:id/complete — Tamamla (kuaför)
     complete = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {

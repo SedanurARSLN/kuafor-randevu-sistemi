@@ -151,5 +151,8 @@ export class AppointmentService {
         return this.appointmentRepository.findById(id);
     }
 
-    // Bitiş saati fonksiyonu kaldırıldı
+    // ─── KUAFÖR KAZANÇ İSTATİSTİKLERİ
+    async getProviderEarnings(providerId: string) {
+        return this.appointmentRepository.getProviderEarnings(providerId);
+    }
 }

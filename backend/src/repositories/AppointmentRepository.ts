@@ -114,6 +114,32 @@ export class AppointmentRepository implements IAppointmentRepository {
         return result.rows;
     }
 
+    async getProviderEarnings(providerId: string): Promise<{
+        daily: { total: number; count: number };
+        weekly: { total: number; count: number };
+        monthly: { total: number; count: number };
+    }> {
+        const query = `
+            SELECT
+                COALESCE(SUM(CASE WHEN appointment_date = CURRENT_DATE THEN total_price ELSE 0 END), 0) AS daily_total,
+                COUNT(CASE WHEN appointment_date = CURRENT_DATE THEN 1 END) AS daily_count,
+                COALESCE(SUM(CASE WHEN appointment_date >= date_trunc('week', CURRENT_DATE) THEN total_price ELSE 0 END), 0) AS weekly_total,
+                COUNT(CASE WHEN appointment_date >= date_trunc('week', CURRENT_DATE) THEN 1 END) AS weekly_count,
+                COALESCE(SUM(CASE WHEN appointment_date >= date_trunc('month', CURRENT_DATE) THEN total_price ELSE 0 END), 0) AS monthly_total,
+                COUNT(CASE WHEN appointment_date >= date_trunc('month', CURRENT_DATE) THEN 1 END) AS monthly_count
+            FROM appointments
+            WHERE provider_id = $1
+              AND status = 'completed'
+        `;
+        const result = await pool.query(query, [providerId]);
+        const row = result.rows[0];
+        return {
+            daily:   { total: parseFloat(row.daily_total),   count: parseInt(row.daily_count) },
+            weekly:  { total: parseFloat(row.weekly_total),  count: parseInt(row.weekly_count) },
+            monthly: { total: parseFloat(row.monthly_total), count: parseInt(row.monthly_count) },
+        };
+    }
+
     async updateStatus(id: string, status: string): Promise<Appointment | null> {
         const query = `
             UPDATE appointments 

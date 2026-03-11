@@ -35,6 +35,14 @@ router.post(
     appointmentController.create
 );
 
+// Kuaför: Kazanç istatistikleri
+router.get(
+    '/earnings',
+    authenticate,
+    authorize('provider'),
+    appointmentController.getEarnings
+);
+
 // Herkes: Kendi randevularını gör
 router.get(
     '/my',
