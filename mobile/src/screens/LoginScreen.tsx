@@ -12,11 +12,14 @@ import {
   ScrollView,
   StatusBar,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES, FONTS, GRADIENTS, SHADOWS } from '../constants/theme';
+
+const { width } = Dimensions.get('window');
 
 function AnimatedInput({
   icon, placeholder, value, onChangeText, secureTextEntry,
@@ -91,25 +94,6 @@ export default function LoginScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
 
-      <LinearGradient
-        colors={GRADIENTS.primaryDark}
-        style={styles.gradientBg}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        {/* Dekoratif daireler */}
-        <View style={styles.decorCircle1} />
-        <View style={styles.decorCircle2} />
-
-        <View style={styles.brandArea}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="cut" size={42} color={COLORS.primary} />
-          </View>
-          <Text style={styles.brandTitle}>Kuaför Randevu</Text>
-          <Text style={styles.brandSubtitle}>Randevunuzu kolayca yönetin</Text>
-        </View>
-      </LinearGradient>
-
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -118,9 +102,30 @@ export default function LoginScreen({ navigation }: any) {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
+          {/* Gradient Header - ScrollView İÇİNDE */}
+          <LinearGradient
+            colors={GRADIENTS.primaryDark}
+            style={styles.gradientBg}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.decorCircle1} />
+            <View style={styles.decorCircle2} />
+            <View style={styles.decorCircle3} />
+
+            <View style={styles.brandArea}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="cut" size={42} color={COLORS.primary} />
+              </View>
+              <Text style={styles.brandTitle}>Kuaför Randevu</Text>
+              <Text style={styles.brandSubtitle}>Randevunuzu kolayca yönetin</Text>
+            </View>
+          </LinearGradient>
+
+          {/* Beyaz Kart - gradient'in hemen altında */}
           <View style={styles.card}>
-            {/* Kart baslik */}
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleRow}>
                 <View style={styles.titleAccent} />
@@ -129,7 +134,6 @@ export default function LoginScreen({ navigation }: any) {
               <Text style={styles.cardSubtitle}>Hoşgeldiniz, devam etmek için giriş yapın</Text>
             </View>
 
-            {/* Email */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>E-posta Adresi</Text>
               <AnimatedInput
@@ -141,7 +145,6 @@ export default function LoginScreen({ navigation }: any) {
               />
             </View>
 
-            {/* Sifre */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Şifre</Text>
               <AnimatedInput
@@ -162,7 +165,6 @@ export default function LoginScreen({ navigation }: any) {
               />
             </View>
 
-            {/* Giris Butonu */}
             <TouchableOpacity
               style={[styles.loginBtnWrap, loading && { opacity: 0.75 }]}
               onPress={handleLogin}
@@ -186,14 +188,12 @@ export default function LoginScreen({ navigation }: any) {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Ayrac */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>veya</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Kayit Ol */}
             <TouchableOpacity
               style={styles.registerBtn}
               onPress={() => navigation.navigate('Register')}
@@ -203,7 +203,6 @@ export default function LoginScreen({ navigation }: any) {
               <Text style={styles.registerBtnText}>Yeni Hesap Oluştur</Text>
             </TouchableOpacity>
 
-            {/* Alt not */}
             <Text style={styles.footerNote}>
               Kayıt olarak{' '}
               <Text style={styles.footerLink}>Gizlilik Politikasını</Text>
@@ -218,24 +217,34 @@ export default function LoginScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: COLORS.surfaceSecondary },
+  container: { flex: 1, backgroundColor: COLORS.white },
+  scrollContent: {
+    flexGrow: 1,
+  },
 
   gradientBg: {
-    paddingTop: Platform.OS === 'ios' ? 64 : (StatusBar.currentHeight ?? 0) + 20,
-    paddingBottom: 64,
+    paddingTop: Platform.OS === 'ios' ? 64 : (StatusBar.currentHeight ?? 0) + 24,
+    paddingBottom: 48,
     paddingHorizontal: SIZES.padding,
+    overflow: 'hidden',
   },
   decorCircle1: {
     position: 'absolute',
-    width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    top: -60, right: -40,
+    width: 220, height: 220, borderRadius: 110,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    top: -70, right: -50,
   },
   decorCircle2: {
     position: 'absolute',
-    width: 140, height: 140, borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    bottom: -20, left: -30,
+    width: 150, height: 150, borderRadius: 75,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -30, left: -40,
+  },
+  decorCircle3: {
+    position: 'absolute',
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    top: 60, left: width * 0.6,
   },
   brandArea: { alignItems: 'center' },
   iconCircle: {
@@ -258,21 +267,15 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  scrollContent: {
-    paddingBottom: 40,
-    marginTop: -36,
-  },
   card: {
     backgroundColor: COLORS.white,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    borderRadius: 28,
-    marginHorizontal: 14,
+    marginTop: -24,
     paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 28,
-    zIndex: 10,
-    ...SHADOWS.md,
+    paddingTop: 32,
+    paddingBottom: 32,
+    flex: 1,
   },
 
   cardHeader: { marginBottom: 24 },
