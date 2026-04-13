@@ -222,9 +222,8 @@ const styles = StyleSheet.create({
 
   gradientBg: {
     paddingTop: Platform.OS === 'ios' ? 64 : (StatusBar.currentHeight ?? 0) + 20,
-    paddingBottom: 56,
+    paddingBottom: 64,
     paddingHorizontal: SIZES.padding,
-    overflow: 'hidden',
   },
   decorCircle1: {
     position: 'absolute',
@@ -261,7 +260,7 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     paddingBottom: 40,
-    marginTop: -28,
+    marginTop: -36,
   },
   card: {
     backgroundColor: COLORS.white,
@@ -272,6 +271,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: 28,
+    zIndex: 10,
     ...SHADOWS.md,
   },
 
