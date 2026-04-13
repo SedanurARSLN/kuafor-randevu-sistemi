@@ -69,15 +69,15 @@ export default function ProvidersScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.pageHeader}>
-        <Text style={styles.pageTitle}>Kuaforler</Text>
-        <Text style={styles.pageCount}>{providers.length} kuafor</Text>
+        <Text style={styles.pageTitle}>Kuaförler</Text>
+        <Text style={styles.pageCount}>{providers.length} kuaför</Text>
       </View>
 
       <View style={styles.searchBox}>
         <Ionicons name="search-outline" size={18} color={COLORS.textMuted} style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Kuafor ara..."
+          placeholder="Kuaför ara..."
           value={search}
           onChangeText={setSearch}
           placeholderTextColor={COLORS.textMuted}
@@ -127,7 +127,7 @@ export default function ProvidersScreen({ navigation }: any) {
                 onPress={() => navigation.navigate('BookAppointment', { provider: item })}
                 activeOpacity={0.85}
               >
-                <Text style={styles.bookBtnText}>Randevu Al</Text>
+                <Text style={styles.bookBtnText}>Randevu Alın</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           )}
@@ -137,10 +137,10 @@ export default function ProvidersScreen({ navigation }: any) {
                 <Ionicons name="cut-outline" size={48} color={COLORS.primary} />
               </View>
               <Text style={styles.emptyTitle}>
-                {search ? 'Kuafor bulunamadi' : 'Henuz kuafor yok'}
+                {search ? 'Kuaför bulunamadı' : 'Henüz kuaför yok'}
               </Text>
               <Text style={styles.emptySubtitle}>
-                {search ? `"${search}" icin sonuc yok` : 'Yakin zamanda kuaforler eklenecek'}
+                {search ? `"${search}" için sonuç yok` : 'Yakın zamanda kuaförler eklenecek'}
               </Text>
             </View>
           }

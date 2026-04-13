@@ -72,7 +72,7 @@ function CustomerTabs() {
         name="Providers"
         component={ProvidersScreen}
         options={{
-          title: 'Kuaforler',
+          title: 'Kuaförler',
           tabBarIcon: ({ color, size }) => <Ionicons name="cut-outline" size={size} color={color} />,
         }}
       />
@@ -80,7 +80,7 @@ function CustomerTabs() {
         name="Appointments"
         component={AppointmentsScreen}
         options={{
-          title: 'Randevularim',
+          title: 'Randevularım',
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />

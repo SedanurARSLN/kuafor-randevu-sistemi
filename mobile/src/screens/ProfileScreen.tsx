@@ -27,20 +27,20 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    Alert.alert('Cikis', 'Cikis yapmak istiyor musunuz?', [
-      { text: 'Hayir', style: 'cancel' },
+    Alert.alert('Çıkış', 'Çıkış yapmak istiyor musunuz?', [
+      { text: 'Hayır', style: 'cancel' },
       { text: 'Evet', onPress: logout },
     ]);
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Hesabi Sil',
-      'Hesabiniz ve tum verileriniz kalici olarak silinecek. Bu islem geri alinamaz.',
+      'Hesabı Sil',
+      'Hesabınız ve tüm verileriniz kalıcı olarak silinecek. Bu işlem geri alınamaz.',
       [
-        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Vazgeç', style: 'cancel' },
         {
-          text: 'Hesabimi Sil',
+          text: 'Hesabımı Sil',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -74,7 +74,7 @@ export default function ProfileScreen() {
           <Text style={styles.name}>{user?.full_name}</Text>
           <View style={styles.roleBadge}>
             <Ionicons name={user?.role === 'provider' ? 'cut' : 'person'} size={12} color={COLORS.white} />
-            <Text style={styles.roleText}>{user?.role === 'provider' ? 'Kuafor' : 'Musteri'}</Text>
+            <Text style={styles.roleText}>{user?.role === 'provider' ? 'Kuaför' : 'Müşteri'}</Text>
           </View>
         </LinearGradient>
 
@@ -84,25 +84,25 @@ export default function ProfileScreen() {
             <Text style={styles.cardTitle}>Hesap Bilgileri</Text>
             <InfoRow icon="mail-outline" label="Email" value={user?.email ?? ''} />
             <View style={styles.divider} />
-            <InfoRow icon="call-outline" label="Telefon" value={user?.phone || 'Belirtilmemis'} />
+            <InfoRow icon="call-outline" label="Telefon" value={user?.phone || 'Belirtilmemiş'} />
             <View style={styles.divider} />
             <InfoRow
               icon="person-circle-outline"
-              label="Hesap Turu"
-              value={user?.role === 'provider' ? 'Kuafor' : 'Musteri'}
+              label="Hesap Türü"
+              value={user?.role === 'provider' ? 'Kuaför' : 'Müşteri'}
             />
           </View>
 
           {/* About Card */}
           <View style={[styles.card, SHADOWS.sm]}>
-            <Text style={styles.cardTitle}>Uygulama Hakkinda</Text>
+            <Text style={styles.cardTitle}>Uygulama Hakkında</Text>
             <View style={styles.infoRow}>
               <View style={styles.infoIconBox}>
                 <Ionicons name="information-circle-outline" size={18} color={COLORS.primary} />
               </View>
               <View style={styles.infoText}>
                 <Text style={styles.infoLabel}>Versiyon</Text>
-                <Text style={styles.infoValue}>Kuafor Randevu v1.0</Text>
+                <Text style={styles.infoValue}>Kuaför Randevu v1.0</Text>
               </View>
             </View>
             <View style={styles.divider} />
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.infoText}>
                 <Text style={styles.infoLabel}>Gizlilik</Text>
-                <Text style={styles.infoValue}>Online randevu yonetim sistemi</Text>
+                <Text style={styles.infoValue}>Online randevu yönetim sistemi</Text>
               </View>
             </View>
           </View>
@@ -120,12 +120,12 @@ export default function ProfileScreen() {
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
             <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
-            <Text style={styles.logoutText}>Cikis Yap</Text>
+            <Text style={styles.logoutText}>Çıkış Yap</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount} activeOpacity={0.85}>
             <Ionicons name="trash-outline" size={16} color={COLORS.danger} />
-            <Text style={styles.deleteText}>Hesabimi Sil</Text>
+            <Text style={styles.deleteText}>Hesabımı Sil</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

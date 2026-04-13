@@ -43,18 +43,18 @@ export default function RegisterScreen({ navigation }: any) {
 
   const handleRegister = async () => {
     if (!fullName || !email || !phone || !password) {
-      Alert.alert('Hata', 'Tum alanlar zorunludur');
+      Alert.alert('Hata', 'Tüm alanlar zorunludur');
       return;
     }
     if (password.length < 6) {
-      setPasswordError('Sifre en az 6 karakter olmalidir');
+      setPasswordError('Şifre en az 6 karakter olmalıdır');
       return;
     } else {
       setPasswordError('');
     }
     const phoneDigits = phone.replace(/\D/g, '');
     if (phoneDigits.length !== 11) {
-      Alert.alert('Hata', 'Telefon numarasini 11 haneli olarak girin');
+      Alert.alert('Hata', 'Telefon numarasını 11 haneli olarak girin');
       return;
     }
     setLoading(true);
@@ -62,7 +62,7 @@ export default function RegisterScreen({ navigation }: any) {
       await register({ full_name: fullName, email, phone: phoneDigits, password, role });
     } catch (error: any) {
       const apiData = error.response?.data;
-      const baseMessage = apiData?.message || 'Kayit basarisiz';
+      const baseMessage = apiData?.message || 'Kayıt başarısız';
       const fieldErrors = Array.isArray(apiData?.errors)
         ? apiData.errors.map((e: any) => `• ${e.message}`).join('\n')
         : '';
@@ -87,8 +87,8 @@ export default function RegisterScreen({ navigation }: any) {
         <View style={styles.iconCircle}>
           <Ionicons name="person-add" size={36} color={COLORS.primary} />
         </View>
-        <Text style={styles.title}>Kayit Ol</Text>
-        <Text style={styles.subtitle}>Yeni hesap olusturun</Text>
+        <Text style={styles.title}>Kayıt Ol</Text>
+        <Text style={styles.subtitle}>Yeni hesap oluşturun</Text>
       </LinearGradient>
 
       <KeyboardAvoidingView
@@ -101,7 +101,7 @@ export default function RegisterScreen({ navigation }: any) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Hesap Turu</Text>
+            <Text style={styles.sectionLabel}>Hesap Türü</Text>
             <View style={styles.roleContainer}>
               <TouchableOpacity
                 style={[styles.roleCard, role === 'customer' && styles.roleCardActive]}
@@ -111,8 +111,8 @@ export default function RegisterScreen({ navigation }: any) {
                 <View style={[styles.roleIconBox, role === 'customer' && styles.roleIconBoxActive]}>
                   <Ionicons name="person" size={28} color={role === 'customer' ? COLORS.white : COLORS.textMuted} />
                 </View>
-                <Text style={[styles.roleCardTitle, role === 'customer' && styles.roleCardTitleActive]}>Musteri</Text>
-                <Text style={[styles.roleCardSub, role === 'customer' && styles.roleCardSubActive]}>Randevu alin</Text>
+                <Text style={[styles.roleCardTitle, role === 'customer' && styles.roleCardTitleActive]}>Müşteri</Text>
+                <Text style={[styles.roleCardSub, role === 'customer' && styles.roleCardSubActive]}>Randevu alın</Text>
                 {role === 'customer' && (
                   <View style={styles.roleCheck}>
                     <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
@@ -127,8 +127,8 @@ export default function RegisterScreen({ navigation }: any) {
                 <View style={[styles.roleIconBox, role === 'provider' && styles.roleIconBoxActive]}>
                   <Ionicons name="cut" size={28} color={role === 'provider' ? COLORS.white : COLORS.textMuted} />
                 </View>
-                <Text style={[styles.roleCardTitle, role === 'provider' && styles.roleCardTitleActive]}>Kuafor</Text>
-                <Text style={[styles.roleCardSub, role === 'provider' && styles.roleCardSubActive]}>Randevu alin</Text>
+                <Text style={[styles.roleCardTitle, role === 'provider' && styles.roleCardTitleActive]}>Kuaför</Text>
+                <Text style={[styles.roleCardSub, role === 'provider' && styles.roleCardSubActive]}>Randevu alın</Text>
                 {role === 'provider' && (
                   <View style={styles.roleCheck}>
                     <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
@@ -143,7 +143,7 @@ export default function RegisterScreen({ navigation }: any) {
                 <Ionicons name="person-outline" size={18} color={COLORS.textMuted} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Adiniz Soyadiniz"
+                  placeholder="Adınız Soyadınız"
                   value={fullName}
                   onChangeText={setFullName}
                   placeholderTextColor={COLORS.textMuted}
@@ -184,7 +184,7 @@ export default function RegisterScreen({ navigation }: any) {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Sifre</Text>
+              <Text style={styles.label}>Şifre</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="lock-closed-outline" size={18} color={COLORS.textMuted} style={styles.inputIcon} />
                 <TextInput
@@ -221,15 +221,15 @@ export default function RegisterScreen({ navigation }: any) {
                 {loading ? (
                   <ActivityIndicator color={COLORS.white} />
                 ) : (
-                  <Text style={styles.buttonText}>Kayit Ol</Text>
+                  <Text style={styles.buttonText}>Kayıt Ol</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.linkButton} onPress={() => navigation.goBack()}>
               <Text style={styles.linkText}>
-                Zaten hesabiniz var mi?{'  '}
-                <Text style={styles.linkBold}>Giris Yap</Text>
+                Zaten hesabınız var mı?{'  '}
+                <Text style={styles.linkBold}>Giriş Yap</Text>
               </Text>
             </TouchableOpacity>
           </View>

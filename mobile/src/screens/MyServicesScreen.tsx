@@ -28,7 +28,7 @@ export default function MyServicesScreen() {
       const response = await api.get('/services/my');
       setServices(response.data.data);
     } catch {
-      Alert.alert('Hata', 'Hizmetler yuklenemedi');
+      Alert.alert('Hata', 'Hizmetler yüklenemedi');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -54,7 +54,7 @@ export default function MyServicesScreen() {
 
   const handleSave = async () => {
     if (!form.name || !form.duration_minutes || !form.price) {
-      Alert.alert('Hata', 'Ad, sure ve fiyat zorunludur');
+      Alert.alert('Hata', 'Ad, süre ve fiyat zorunludur');
       return;
     }
     setSubmitting(true);
@@ -73,7 +73,7 @@ export default function MyServicesScreen() {
       setModalVisible(false);
       fetchServices();
     } catch (error: any) {
-      Alert.alert('Hata', error.response?.data?.message || 'Islem basarisiz');
+      Alert.alert('Hata', error.response?.data?.message || 'İşlem başarısız');
     } finally {
       setSubmitting(false);
     }
@@ -81,7 +81,7 @@ export default function MyServicesScreen() {
 
   const handleDelete = (id: string, name: string) => {
     Alert.alert('Sil', `"${name}" hizmetini silmek istiyor musunuz?`, [
-      { text: 'Hayir', style: 'cancel' },
+      { text: 'Hayır', style: 'cancel' },
       {
         text: 'Evet, Sil', style: 'destructive',
         onPress: async () => {
@@ -101,7 +101,7 @@ export default function MyServicesScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.pageHeader}>
         <Text style={styles.pageTitle}>Hizmetlerim</Text>
-        <Text style={styles.pageCount}>{services.length} hizmet</Text>
+        <Text style={styles.pageCount}>{services.length} hizmet tanımlı</Text>
       </View>
 
       {loading ? (
@@ -153,7 +153,7 @@ export default function MyServicesScreen() {
                       onPress={() => openEditModal(item)}
                     >
                       <Ionicons name="create-outline" size={18} color={COLORS.primary} />
-                      <Text style={[styles.iconActionText, { color: COLORS.primary }]}>Duzenle</Text>
+                      <Text style={[styles.iconActionText, { color: COLORS.primary }]}>Düzenle</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.iconActionBtn, { backgroundColor: COLORS.danger + '12' }]}
@@ -172,8 +172,8 @@ export default function MyServicesScreen() {
               <View style={styles.emptyIconBox}>
                 <Ionicons name="cut-outline" size={48} color={COLORS.primary} />
               </View>
-              <Text style={styles.emptyTitle}>Henuz hizmet eklemediniz</Text>
-              <Text style={styles.emptySubtitle}>Musteri cekebilmek icin hizmetlerinizi ekleyin</Text>
+              <Text style={styles.emptyTitle}>Henüz hizmet eklemediniz</Text>
+              <Text style={styles.emptySubtitle}>Müşteri çekebilmek için hizmetlerinizi ekleyin</Text>
               <TouchableOpacity style={styles.emptyBtn} onPress={openAddModal}>
                 <Text style={styles.emptyBtnText}>Hizmet Ekle</Text>
               </TouchableOpacity>
@@ -206,7 +206,7 @@ export default function MyServicesScreen() {
                 <View style={styles.modalHandle} />
                 <View style={styles.modalHeaderRow}>
                   <Text style={styles.modalTitle}>
-                    {editingService ? 'Hizmet Duzenle' : 'Yeni Hizmet'}
+                    {editingService ? 'Hizmet Düzenle' : 'Yeni Hizmet'}
                   </Text>
                   <TouchableOpacity
                     onPress={() => { Keyboard.dismiss(); setModalVisible(false); }}
@@ -220,7 +220,7 @@ export default function MyServicesScreen() {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    placeholder="Ornegin: Sac Kesimi"
+                    placeholder="Örn: Saç Kesimi"
                     value={form.name}
                     onChangeText={(t) => setForm({ ...form, name: t })}
                     placeholderTextColor={COLORS.textMuted}
@@ -231,7 +231,7 @@ export default function MyServicesScreen() {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    placeholder="Ornegin: Erkek sac kesimi"
+                    placeholder="Örn: Erkek saç kesimi"
                     value={form.description}
                     onChangeText={(t) => setForm({ ...form, description: t })}
                     placeholderTextColor={COLORS.textMuted}
@@ -278,7 +278,7 @@ export default function MyServicesScreen() {
                     {submitting ? (
                       <ActivityIndicator color={COLORS.white} />
                     ) : (
-                      <Text style={styles.saveBtnText}>{editingService ? 'Guncelle' : 'Ekle'}</Text>
+                      <Text style={styles.saveBtnText}>{editingService ? 'Güncelle' : 'Ekle'}</Text>
                     )}
                   </LinearGradient>
                 </TouchableOpacity>

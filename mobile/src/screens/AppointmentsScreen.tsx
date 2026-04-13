@@ -18,9 +18,9 @@ import { COLORS, SIZES, FONTS, SHADOWS } from '../constants/theme';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
   pending:   { label: 'Bekliyor',    color: COLORS.pending,   icon: 'time-outline' },
-  confirmed: { label: 'Onaylandi',   color: COLORS.confirmed, icon: 'checkmark-circle-outline' },
-  cancelled: { label: 'Iptal',       color: COLORS.cancelled, icon: 'close-circle-outline' },
-  completed: { label: 'Tamamlandi', color: COLORS.completed, icon: 'checkmark-done-outline' },
+  confirmed: { label: 'Onaylandı',   color: COLORS.confirmed, icon: 'checkmark-circle-outline' },
+  cancelled: { label: 'İptal',       color: COLORS.cancelled, icon: 'close-circle-outline' },
+  completed: { label: 'Tamamlandı', color: COLORS.completed, icon: 'checkmark-done-outline' },
 };
 
 function SkeletonCard() {
@@ -57,7 +57,7 @@ export default function AppointmentsScreen({ navigation }: any) {
       const response = await appointmentService.getMyAppointments();
       setAppointments(response.data);
     } catch {
-      Alert.alert('Hata', 'Randevular yuklenemedi');
+      Alert.alert('Hata', 'Randevular yüklenemedi');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,7 +73,7 @@ export default function AppointmentsScreen({ navigation }: any) {
       complete: 'Randevuyu tamamlamak istiyor musunuz?',
     };
     Alert.alert('Onay', messages[action], [
-      { text: 'Hayir', style: 'cancel' },
+      { text: 'Hayır', style: 'cancel' },
       {
         text: 'Evet',
         onPress: async () => {
@@ -83,7 +83,7 @@ export default function AppointmentsScreen({ navigation }: any) {
             if (action === 'complete') await appointmentService.complete(id);
             fetchAppointments();
           } catch (error: any) {
-            Alert.alert('Hata', error.response?.data?.message || 'Islem basarisiz');
+            Alert.alert('Hata', error.response?.data?.message || 'İşlem başarısız');
           }
         },
       },
@@ -165,7 +165,7 @@ export default function AppointmentsScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.pageHeader}>
-        <Text style={styles.pageTitle}>Randevularim</Text>
+        <Text style={styles.pageTitle}>Randevularım</Text>
         <Text style={styles.pageCount}>{appointments.length} randevu</Text>
       </View>
       {loading ? (
@@ -193,8 +193,8 @@ export default function AppointmentsScreen({ navigation }: any) {
               <View style={styles.emptyIconBox}>
                 <Ionicons name="calendar-outline" size={48} color={COLORS.primary} />
               </View>
-              <Text style={styles.emptyTitle}>Henuz randevunuz yok</Text>
-              <Text style={styles.emptySubtitle}>Randevu almak icin Kuaforler sekmesini ziyaret edin</Text>
+              <Text style={styles.emptyTitle}>Henüz randevunuz yok</Text>
+              <Text style={styles.emptySubtitle}>Randevu almak için Kuaförler sekmesini ziyaret edin</Text>
               {user?.role === 'customer' && (
                 <TouchableOpacity
                   style={styles.emptyBtn}

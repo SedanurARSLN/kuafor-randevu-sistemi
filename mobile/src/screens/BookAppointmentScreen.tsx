@@ -50,7 +50,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       const response = await api.get(`/auth/providers/${provider.id}/services`);
       setServices(response.data.data);
     } catch {
-      Alert.alert('Hata', 'Hizmetler yuklenemedi');
+      Alert.alert('Hata', 'Hizmetler yüklenemedi');
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
 
   const handleBook = async () => {
     if (selectedServices.length === 0 || !selectedDate || !selectedTime) {
-      Alert.alert('Hata', 'Lutfen en az bir hizmet, tarih ve saat secin');
+      Alert.alert('Hata', 'Lütfen en az bir hizmet, tarih ve saat seçin');
       return;
     }
     setSubmitting(true);
@@ -89,11 +89,11 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         total_price: getTotalPrice(),
         notes: notes || undefined,
       });
-      Alert.alert('Basarili!', 'Randevunuz olusturuldu', [
+      Alert.alert('Başarılı!', 'Randevunuz oluşturuldu', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Randevu olusturulamadi';
+      const msg = error.response?.data?.message || 'Randevu oluşturulamadı';
       Alert.alert('Hata', msg);
     } finally {
       setSubmitting(false);
@@ -141,7 +141,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
         {/* Services */}
-        <Text style={styles.sectionTitle}>Hizmet Secin</Text>
+          <Text style={styles.sectionTitle}>Hizmet Seçin</Text>
         {services.map((service) => {
           const isSelected = selectedServices.some((s) => s.id === service.id);
           return (
@@ -172,7 +172,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         })}
 
         {/* Date Selection */}
-        <Text style={styles.sectionTitle}>Tarih Secin</Text>
+          <Text style={styles.sectionTitle}>Tarih Seçin</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateRow}>
           {dates.map((d) => {
             const isSelected = selectedDate === d.full;
@@ -206,7 +206,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         </ScrollView>
 
         {/* Time Slots */}
-        <Text style={styles.sectionTitle}>Saat Secin</Text>
+          <Text style={styles.sectionTitle}>Saat Seçin</Text>
         <View style={styles.timeGrid}>
           {TIME_SLOTS.map((time) => {
             const isBusy = busySlots.includes(time);
@@ -241,10 +241,10 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         </View>
 
         {/* Note */}
-        <Text style={styles.sectionTitle}>Not (opsiyonel)</Text>
-        <TextInput
-          style={styles.noteInput}
-          placeholder="Ornegin: Kisa kesim istiyorum"
+          <Text style={styles.sectionTitle}>Not (opsiyonel)</Text>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="Örn: Kısa kesim istiyorum"
           value={notes}
           onChangeText={setNotes}
           multiline
@@ -257,7 +257,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
             colors={['#EFF6FF', '#DBEAFE']}
             style={styles.summary}
           >
-            <Text style={styles.summaryTitle}>Randevu Ozeti</Text>
+            <Text style={styles.summaryTitle}>Randevu Özeti</Text>
             {selectedServices.map((s) => (
               <View key={s.id} style={styles.summaryRow}>
                 <Ionicons name="cut-outline" size={14} color={COLORS.primary} />
@@ -275,7 +275,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
               <Text style={styles.summaryText}>{selectedTime}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Toplam</Text>
+              <Text style={styles.totalLabel}>Toplam Tutar</Text>
               <Text style={styles.totalAmount}>₺{totalPrice}</Text>
             </View>
           </LinearGradient>
@@ -298,7 +298,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
             ) : (
               <>
                 <Ionicons name="calendar-check" size={20} color={COLORS.white} style={{ marginRight: 8 }} />
-                <Text style={styles.bookBtnText}>Randevu Al</Text>
+                <Text style={styles.bookBtnText}>Randevu Oluştur</Text>
               </>
             )}
           </LinearGradient>

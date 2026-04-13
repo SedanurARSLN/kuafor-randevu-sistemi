@@ -13,7 +13,7 @@ import { COLORS, SIZES, FONTS, GRADIENTS, SHADOWS } from '../constants/theme';
 type EarningsPeriod = 'daily' | 'weekly' | 'monthly';
 
 const periodLabels: Record<EarningsPeriod, string> = {
-  daily: 'Bugun',
+  daily: 'Bugün',
   weekly: 'Bu Hafta',
   monthly: 'Bu Ay',
 };
@@ -95,11 +95,11 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             <View style={styles.roleBadge}>
               <Ionicons name={isProvider ? 'cut' : 'person'} size={14} color={COLORS.white} />
-              <Text style={styles.roleText}>{isProvider ? 'Kuafor' : 'Musteri'}</Text>
+              <Text style={styles.roleText}>{isProvider ? 'Kuaför' : 'Müşteri'}</Text>
             </View>
           </View>
           <Text style={styles.headerSub}>
-            {isProvider ? 'Isaletmenizi yonetin' : 'Randevunuzu kolayca yonetin'}
+            {isProvider ? 'İşletmenizi yönetin' : 'Randevunuzu kolayca yönetin'}
           </Text>
         </LinearGradient>
 
@@ -122,11 +122,11 @@ export default function HomeScreen({ navigation }: any) {
                     </TouchableOpacity>
                   ))}
                 </View>
-                <Text style={styles.earningsLabel}>Toplam Kazanc</Text>
+                <Text style={styles.earningsLabel}>Toplam Kazanç</Text>
                 <Text style={styles.earningsAmount}>
                   ₺{currentEarning.total.toLocaleString('tr-TR', { minimumFractionDigits: 0 })}
                 </Text>
-                <Text style={styles.earningsSubtext}>{currentEarning.count} randevu tamamlandi</Text>
+                <Text style={styles.earningsSubtext}>{currentEarning.count} randevu tamamlandı</Text>
               </View>
 
               {/* Provider stats */}
@@ -154,21 +154,21 @@ export default function HomeScreen({ navigation }: any) {
           )}
 
           {/* Quick Access */}
-          <Text style={styles.sectionTitle}>Hizli Erisim</Text>
+          <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
 
           {!isProvider ? (
             <>
               <QuickCard
                 icon="cut"
                 title="Randevu Al"
-                desc="Kuafor secip randevu olusturun"
+                desc="Kuaför seçip randevu oluşturun"
                 onPress={() => navigation.navigate('Providers')}
                 accent={COLORS.primary}
               />
               <QuickCard
                 icon="calendar"
-                title="Randevularim"
-                desc="Tum randevularinizi gorun"
+                title="Randevularım"
+                desc="Tüm randevularınızı görün"
                 onPress={() => navigation.navigate('Appointments')}
                 accent={COLORS.completed}
               />
@@ -177,22 +177,22 @@ export default function HomeScreen({ navigation }: any) {
             <>
               <QuickCard
                 icon="share-social"
-                title="Randevu Linki Paylas"
-                desc="WhatsApp / SMS ile musteriye gonderin"
+                title="Randevu Linki Paylaş"
+                desc="WhatsApp / SMS ile müşteriye gönderin"
                 onPress={handleShareLink}
                 accent={COLORS.success}
               />
               <QuickCard
                 icon="calendar"
                 title="Gelen Randevular"
-                desc="Randevulari yonetin"
+                desc="Randevuları yönetin"
                 onPress={() => navigation.navigate('Appointments')}
                 accent={COLORS.primary}
               />
               <QuickCard
                 icon="cut"
                 title="Hizmetlerim"
-                desc="Hizmet ekle ve duzenle"
+                desc="Hizmet ekle ve düzenle"
                 onPress={() => navigation.navigate('MyServices')}
                 accent={COLORS.secondary}
               />

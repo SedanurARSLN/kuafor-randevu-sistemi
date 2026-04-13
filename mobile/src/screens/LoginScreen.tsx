@@ -73,15 +73,15 @@ export default function LoginScreen({ navigation }: any) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Eksik Bilgi', 'Email ve sifre zorunludur');
+      Alert.alert('Eksik Bilgi', 'E-posta ve şifre zorunludur');
       return;
     }
     setLoading(true);
     try {
       await login({ email, password });
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Giris basarisiz. Bilgilerinizi kontrol edin.';
-      Alert.alert('Giris Hatasi', message);
+      const message = error.response?.data?.message || 'Giriş başarısız. Bilgilerinizi kontrol edin.';
+      Alert.alert('Giriş Hatası', message);
     } finally {
       setLoading(false);
     }
@@ -105,8 +105,8 @@ export default function LoginScreen({ navigation }: any) {
           <View style={styles.iconCircle}>
             <Ionicons name="cut" size={42} color={COLORS.primary} />
           </View>
-          <Text style={styles.brandTitle}>Kuafor Randevu</Text>
-          <Text style={styles.brandSubtitle}>Randevunuzu kolayca yonetin</Text>
+          <Text style={styles.brandTitle}>Kuaför Randevu</Text>
+          <Text style={styles.brandSubtitle}>Randevunuzu kolayca yönetin</Text>
         </View>
       </LinearGradient>
 
@@ -124,14 +124,14 @@ export default function LoginScreen({ navigation }: any) {
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleRow}>
                 <View style={styles.titleAccent} />
-                <Text style={styles.cardTitle}>Giris Yap</Text>
+                <Text style={styles.cardTitle}>Giriş Yap</Text>
               </View>
-              <Text style={styles.cardSubtitle}>Hosgeldiniz, devam etmek icin giris yapin</Text>
+              <Text style={styles.cardSubtitle}>Hoşgeldiniz, devam etmek için giriş yapın</Text>
             </View>
 
             {/* Email */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Email Adresi</Text>
+              <Text style={styles.label}>E-posta Adresi</Text>
               <AnimatedInput
                 icon="mail-outline"
                 placeholder="ornek@email.com"
@@ -143,7 +143,7 @@ export default function LoginScreen({ navigation }: any) {
 
             {/* Sifre */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Sifre</Text>
+              <Text style={styles.label}>Şifre</Text>
               <AnimatedInput
                 icon="lock-closed-outline"
                 placeholder="••••••••"
@@ -179,7 +179,7 @@ export default function LoginScreen({ navigation }: any) {
                   <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
                   <>
-                    <Text style={styles.loginBtnText}>Giris Yap</Text>
+                    <Text style={styles.loginBtnText}>Giriş Yap</Text>
                     <Ionicons name="arrow-forward" size={18} color={COLORS.white} style={{ marginLeft: 8 }} />
                   </>
                 )}
@@ -200,14 +200,14 @@ export default function LoginScreen({ navigation }: any) {
               activeOpacity={0.85}
             >
               <Ionicons name="person-add-outline" size={18} color={COLORS.primary} style={{ marginRight: 8 }} />
-              <Text style={styles.registerBtnText}>Yeni Hesap Olustur</Text>
+              <Text style={styles.registerBtnText}>Yeni Hesap Oluştur</Text>
             </TouchableOpacity>
 
             {/* Alt not */}
             <Text style={styles.footerNote}>
-              Kayit olarak{' '}
-              <Text style={styles.footerLink}>Gizlilik Politikasini</Text>
-              {' '}kabul etmis olursunuz.
+              Kayıt olarak{' '}
+              <Text style={styles.footerLink}>Gizlilik Politikasını</Text>
+              {' '}kabul etmiş olursunuz.
             </Text>
           </View>
         </ScrollView>
