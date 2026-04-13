@@ -1,11 +1,27 @@
 import React from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView,
+  View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, StatusBar, Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { COLORS, SIZES } from '../constants/theme';
+import { COLORS, SIZES, FONTS, GRADIENTS, SHADOWS } from '../constants/theme';
+
+type InfoRowProps = { icon: keyof typeof Ionicons.glyphMap; label: string; value: string };
+function InfoRow({ icon, label, value }: InfoRowProps) {
+  return (
+    <View style={styles.infoRow}>
+      <View style={styles.infoIconBox}>
+        <Ionicons name={icon} size={18} color={COLORS.primary} />
+      </View>
+      <View style={styles.infoText}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -20,7 +36,7 @@ export default function ProfileScreen() {
   const handleDeleteAccount = () => {
     Alert.alert(
       'Hesabi Sil',
-      'Hesabiniz ve tum verileriniz kalici olarak silinecek. Bu islem geri alinamaz. Devam etmek istiyor musunuz?',
+      'Hesabiniz ve tum verileriniz kalici olarak silinecek. Bu islem geri alinamaz.',
       [
         { text: 'Vazgec', style: 'cancel' },
         {
@@ -39,99 +55,142 @@ export default function ProfileScreen() {
     );
   };
 
+  const initials = user?.full_name?.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() ?? '?';
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.full_name?.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-        <Text style={styles.name}>{user?.full_name}</Text>
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleText}>
-            {user?.role === 'provider' ? 'Kuafor' : 'Musteri'}
-          </Text>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Gradient Header */}
+        <LinearGradient
+          colors={GRADIENTS.primaryDark}
+          style={styles.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+          <Text style={styles.name}>{user?.full_name}</Text>
+          <View style={styles.roleBadge}>
+            <Ionicons name={user?.role === 'provider' ? 'cut' : 'person'} size={12} color={COLORS.white} />
+            <Text style={styles.roleText}>{user?.role === 'provider' ? 'Kuafor' : 'Musteri'}</Text>
+          </View>
+        </LinearGradient>
 
-      <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>Hesap Bilgileri</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Email</Text>
-          <Text style={styles.infoValue}>{user?.email}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Telefon</Text>
-          <Text style={styles.infoValue}>{user?.phone || 'Belirtilmemiş'}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Hesap Turu</Text>
-          <Text style={styles.infoValue}>
-            {user?.role === 'provider' ? 'Kuaför' : 'Müşteri'}
-          </Text>
-        </View>
-      </View>
+        <View style={styles.body}>
+          {/* Info Card */}
+          <View style={[styles.card, SHADOWS.sm]}>
+            <Text style={styles.cardTitle}>Hesap Bilgileri</Text>
+            <InfoRow icon="mail-outline" label="Email" value={user?.email ?? ''} />
+            <View style={styles.divider} />
+            <InfoRow icon="call-outline" label="Telefon" value={user?.phone || 'Belirtilmemis'} />
+            <View style={styles.divider} />
+            <InfoRow
+              icon="person-circle-outline"
+              label="Hesap Turu"
+              value={user?.role === 'provider' ? 'Kuafor' : 'Musteri'}
+            />
+          </View>
 
-      <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>Uygulama Hakkinda</Text>
-        <Text style={styles.aboutText}>Kuaför Randevu Sistemi v1.0</Text>
-        <Text style={styles.aboutDesc}>
-          Online kuaför randevu alma ve yönetim uygulaması.
-        </Text>
-      </View>
+          {/* About Card */}
+          <View style={[styles.card, SHADOWS.sm]}>
+            <Text style={styles.cardTitle}>Uygulama Hakkinda</Text>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconBox}>
+                <Ionicons name="information-circle-outline" size={18} color={COLORS.primary} />
+              </View>
+              <View style={styles.infoText}>
+                <Text style={styles.infoLabel}>Versiyon</Text>
+                <Text style={styles.infoValue}>Kuafor Randevu v1.0</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconBox}>
+                <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.primary} />
+              </View>
+              <View style={styles.infoText}>
+                <Text style={styles.infoLabel}>Gizlilik</Text>
+                <Text style={styles.infoValue}>Online randevu yonetim sistemi</Text>
+              </View>
+            </View>
+          </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Cikis Yap</Text>
-      </TouchableOpacity>
+          {/* Logout Button */}
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
+            <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
+            <Text style={styles.logoutText}>Cikis Yap</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-        <Text style={styles.deleteText}>Hesabimi Sil</Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount} activeOpacity={0.85}>
+            <Ionicons name="trash-outline" size={16} color={COLORS.danger} />
+            <Text style={styles.deleteText}>Hesabimi Sil</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SIZES.padding, paddingBottom: 40 },
-  avatarContainer: { alignItems: 'center', marginBottom: 24 },
-  avatar: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 12,
+  content: { paddingBottom: 100 },
+
+  header: {
+    paddingTop: Platform.OS === 'ios' ? 70 : (StatusBar.currentHeight ?? 0) + 24,
+    paddingBottom: 36,
+    alignItems: 'center',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
-  avatarText: { color: COLORS.white, fontSize: 36, fontWeight: 'bold' },
-  name: { fontSize: SIZES.xxl, fontWeight: 'bold', color: COLORS.black },
+  avatarCircle: {
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)',
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: 14,
+    ...SHADOWS.md,
+  },
+  avatarText: { fontFamily: FONTS.bold, fontSize: 36, color: COLORS.white },
+  name: { fontFamily: FONTS.bold, fontSize: 22, color: COLORS.white },
   roleBadge: {
-    backgroundColor: COLORS.primary + '20', paddingHorizontal: 14,
-    paddingVertical: 6, borderRadius: 20, marginTop: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 20, marginTop: 8,
   },
-  roleText: { color: COLORS.primary, fontWeight: '600', fontSize: SIZES.md },
-  infoCard: {
-    backgroundColor: COLORS.white, borderRadius: SIZES.radius,
-    padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 8, elevation: 3,
+  roleText: { fontFamily: FONTS.semiBold, fontSize: SIZES.sm, color: COLORS.white },
+
+  body: { padding: SIZES.padding },
+  card: {
+    backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg,
+    padding: 20, marginBottom: 14,
   },
-  sectionTitle: { fontSize: SIZES.xl, fontWeight: 'bold', color: COLORS.black, marginBottom: 16 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
-  infoLabel: { fontSize: SIZES.md, color: COLORS.gray },
-  infoValue: { fontSize: SIZES.md, color: COLORS.black, fontWeight: '600' },
-  divider: { height: 1, backgroundColor: COLORS.lightGray },
-  aboutText: { fontSize: SIZES.lg, fontWeight: '600', color: COLORS.black },
-  aboutDesc: { fontSize: SIZES.md, color: COLORS.gray, marginTop: 6 },
-  logoutButton: {
-    backgroundColor: COLORS.danger, borderRadius: SIZES.radius,
-    padding: 16, alignItems: 'center', marginTop: 8,
+  cardTitle: { fontFamily: FONTS.semiBold, fontSize: SIZES.md, color: COLORS.textSecondary, marginBottom: 16, letterSpacing: 0.3, textTransform: 'uppercase' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  infoIconBox: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: COLORS.primary + '10',
+    justifyContent: 'center', alignItems: 'center', marginRight: 14,
   },
-  logoutText: { color: COLORS.white, fontSize: SIZES.lg, fontWeight: 'bold' },
-  deleteButton: {
-    backgroundColor: 'transparent', borderRadius: SIZES.radius,
-    padding: 16, alignItems: 'center', marginTop: 12,
-    borderWidth: 1, borderColor: COLORS.danger,
+  infoText: { flex: 1 },
+  infoLabel: { fontFamily: FONTS.regular, fontSize: SIZES.sm, color: COLORS.textMuted },
+  infoValue: { fontFamily: FONTS.semiBold, fontSize: SIZES.md, color: COLORS.textPrimary, marginTop: 1 },
+  divider: { height: 1, backgroundColor: COLORS.border, marginLeft: 54 },
+
+  logoutBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg,
+    paddingVertical: 16, marginBottom: 10,
+    borderWidth: 1.5, borderColor: COLORS.danger,
+    ...SHADOWS.sm,
   },
-  deleteText: { color: COLORS.danger, fontSize: SIZES.md, fontWeight: '600' },
+  logoutText: { fontFamily: FONTS.semiBold, color: COLORS.danger, fontSize: SIZES.lg },
+
+  deleteBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 14,
+  },
+  deleteText: { fontFamily: FONTS.regular, color: COLORS.danger, fontSize: SIZES.md },
 });

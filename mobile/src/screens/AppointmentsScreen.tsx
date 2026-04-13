@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,23 +6,47 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
+  Animated,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { appointmentService } from '../services/appointmentService';
-import { COLORS, SIZES } from '../constants/theme';
+import { COLORS, SIZES, FONTS, SHADOWS } from '../constants/theme';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  pending: { label: 'Bekliyor', color: COLORS.pending, icon: 'time-outline' },
-  confirmed: { label: 'Onaylandi', color: COLORS.confirmed, icon: 'checkmark-circle-outline' },
-  cancelled: { label: 'Iptal', color: COLORS.cancelled, icon: 'close-circle-outline' },
+  pending:   { label: 'Bekliyor',    color: COLORS.pending,   icon: 'time-outline' },
+  confirmed: { label: 'Onaylandi',   color: COLORS.confirmed, icon: 'checkmark-circle-outline' },
+  cancelled: { label: 'Iptal',       color: COLORS.cancelled, icon: 'close-circle-outline' },
   completed: { label: 'Tamamlandi', color: COLORS.completed, icon: 'checkmark-done-outline' },
 };
 
-export default function AppointmentsScreen() {
+function SkeletonCard() {
+  const anim = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, { toValue: 0.7, duration: 700, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+  return (
+    <Animated.View style={[styles.skeletonCard, { opacity: anim }]}>
+      <View style={styles.skeletonStrip} />
+      <View style={styles.skeletonContent}>
+        <View style={[styles.skeletonLine, { width: '60%', height: 16, marginBottom: 8 }]} />
+        <View style={[styles.skeletonLine, { width: '40%', height: 12, marginBottom: 16 }]} />
+        <View style={[styles.skeletonLine, { width: '80%', height: 12, marginBottom: 6 }]} />
+        <View style={[styles.skeletonLine, { width: '50%', height: 12 }]} />
+      </View>
+    </Animated.View>
+  );
+}
+
+export default function AppointmentsScreen({ navigation }: any) {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,19 +56,15 @@ export default function AppointmentsScreen() {
     try {
       const response = await appointmentService.getMyAppointments();
       setAppointments(response.data);
-    } catch (error) {
-      Alert.alert('Hata', 'Randevular yüklenemedi');
+    } catch {
+      Alert.alert('Hata', 'Randevular yuklenemedi');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchAppointments();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { fetchAppointments(); }, []));
 
   const handleAction = async (id: string, action: 'confirm' | 'cancel' | 'complete') => {
     const messages: any = {
@@ -52,9 +72,8 @@ export default function AppointmentsScreen() {
       cancel: 'Randevuyu iptal etmek istiyor musunuz?',
       complete: 'Randevuyu tamamlamak istiyor musunuz?',
     };
-
     Alert.alert('Onay', messages[action], [
-      { text: 'Hayır', style: 'cancel' },
+      { text: 'Hayir', style: 'cancel' },
       {
         text: 'Evet',
         onPress: async () => {
@@ -63,145 +82,195 @@ export default function AppointmentsScreen() {
             if (action === 'cancel') await appointmentService.cancel(id);
             if (action === 'complete') await appointmentService.complete(id);
             fetchAppointments();
-            Alert.alert('Başarılı', 'İşlem tamamlandı');
           } catch (error: any) {
-            Alert.alert('Hata', error.response?.data?.message || 'İşlem başarısız');
+            Alert.alert('Hata', error.response?.data?.message || 'Islem basarisiz');
           }
         },
       },
     ]);
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const renderItem = ({ item }: any) => {
     const status = STATUS_MAP[item.status] || STATUS_MAP.pending;
-
     return (
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View>
-            <Text style={styles.serviceName}>{item.service_name}</Text>
-            <Text style={styles.personName}>
-              {user?.role === 'provider'
-                ? item.customer_name
-                : item.provider_name}
-            </Text>
+      <View style={[styles.card, SHADOWS.sm]}>
+        <View style={[styles.statusStrip, { backgroundColor: status.color }]} />
+        <View style={styles.cardInner}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderLeft}>
+              <Text style={styles.serviceName}>{item.service_name}</Text>
+              <Text style={styles.personName}>
+                {user?.role === 'provider' ? item.customer_name : item.provider_name}
+              </Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
+              <Ionicons name={status.icon} size={12} color={COLORS.white} />
+              <Text style={styles.statusText}>{status.label}</Text>
+            </View>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: status.color + '20' }]}>
-            <Ionicons name={status.icon} size={14} color={status.color} />
-            <Text style={[styles.statusText, { color: status.color, marginLeft: 4 }]}>{status.label}</Text>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="calendar-outline" size={14} color={COLORS.textMuted} />
+            <Text style={styles.infoText}>{formatDate(item.appointment_date)}</Text>
           </View>
-        </View>
+          <View style={styles.infoRow}>
+            <Ionicons name="time-outline" size={14} color={COLORS.textMuted} />
+            <Text style={styles.infoText}>{item.start_time?.slice(0, 5)} - {item.end_time?.slice(0, 5)}</Text>
+          </View>
+          {item.notes ? (
+            <View style={styles.infoRow}>
+              <Ionicons name="chatbubble-outline" size={14} color={COLORS.textMuted} />
+              <Text style={[styles.infoText, { fontStyle: 'italic' }]}>{item.notes}</Text>
+            </View>
+          ) : null}
 
-        <View style={styles.cardBody}>
-          <Text style={styles.info}>{formatDate(item.appointment_date)}</Text>
-          <Text style={styles.info}>{item.start_time?.slice(0, 5)} - {item.end_time?.slice(0, 5)}</Text>
-          <Text style={styles.price}>{item.total_price} TL</Text>
-          {item.notes && <Text style={styles.notes}>{item.notes}</Text>}
-        </View>
-
-        {/* Aksiyon Butonları */}
-        <View style={styles.actions}>
-          {user?.role === 'provider' && item.status === 'pending' && (
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: COLORS.success }]}
-              onPress={() => handleAction(item.id, 'confirm')}
-            >
-              <Text style={styles.actionText}>Onayla</Text>
-            </TouchableOpacity>
-          )}
-
-          {user?.role === 'provider' && item.status === 'confirmed' && (
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: COLORS.completed }]}
-              onPress={() => handleAction(item.id, 'complete')}
-            >
-              <Text style={styles.actionText}>Tamamla</Text>
-            </TouchableOpacity>
-          )}
-
-          {item.status !== 'cancelled' && item.status !== 'completed' && (
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: COLORS.danger }]}
-              onPress={() => handleAction(item.id, 'cancel')}
-            >
-              <Text style={styles.actionText}>Iptal</Text>
-            </TouchableOpacity>
-          )}
+          <View style={styles.cardFooter}>
+            <Text style={styles.price}>₺{item.total_price}</Text>
+            <View style={styles.actions}>
+              {user?.role === 'provider' && item.status === 'pending' && (
+                <TouchableOpacity
+                  style={[styles.iconBtn, { backgroundColor: COLORS.success + '15' }]}
+                  onPress={() => handleAction(item.id, 'confirm')}
+                >
+                  <Ionicons name="checkmark-circle" size={22} color={COLORS.success} />
+                </TouchableOpacity>
+              )}
+              {user?.role === 'provider' && item.status === 'confirmed' && (
+                <TouchableOpacity
+                  style={[styles.iconBtn, { backgroundColor: COLORS.completed + '15' }]}
+                  onPress={() => handleAction(item.id, 'complete')}
+                >
+                  <Ionicons name="checkmark-done-circle" size={22} color={COLORS.completed} />
+                </TouchableOpacity>
+              )}
+              {item.status !== 'cancelled' && item.status !== 'completed' && (
+                <TouchableOpacity
+                  style={[styles.iconBtn, { backgroundColor: COLORS.danger + '15' }]}
+                  onPress={() => handleAction(item.id, 'cancel')}
+                >
+                  <Ionicons name="close-circle" size={22} color={COLORS.danger} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </View>
       </View>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <FlatList
-        data={appointments}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAppointments(); }} />
-        }
-        ListEmptyComponent={
-          <View style={styles.center}>
-            <Ionicons name="calendar-outline" size={60} color={COLORS.gray} />
-            <Text style={styles.emptyText}>Henüz randevunuz yok</Text>
-          </View>
-        }
-      />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <View style={styles.pageHeader}>
+        <Text style={styles.pageTitle}>Randevularim</Text>
+        <Text style={styles.pageCount}>{appointments.length} randevu</Text>
+      </View>
+      {loading ? (
+        <FlatList
+          data={[1, 2, 3]}
+          keyExtractor={(i) => String(i)}
+          renderItem={() => <SkeletonCard />}
+          contentContainerStyle={styles.list}
+        />
+      ) : (
+        <FlatList
+          data={appointments}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchAppointments(); }}
+              colors={[COLORS.primary]}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconBox}>
+                <Ionicons name="calendar-outline" size={48} color={COLORS.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>Henuz randevunuz yok</Text>
+              <Text style={styles.emptySubtitle}>Randevu almak icin Kuaforler sekmesini ziyaret edin</Text>
+              {user?.role === 'customer' && (
+                <TouchableOpacity
+                  style={styles.emptyBtn}
+                  onPress={() => navigation.navigate('Providers')}
+                >
+                  <Text style={styles.emptyBtnText}>Randevu Al</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: SIZES.padding },
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  cardHeader: {
+  pageHeader: {
+    paddingHorizontal: SIZES.padding,
+    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 52,
+    paddingBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
   },
-  serviceName: { fontSize: SIZES.xl, fontWeight: 'bold', color: COLORS.black },
-  personName: { fontSize: SIZES.md, color: COLORS.gray, marginTop: 4 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  statusText: { fontSize: SIZES.sm, fontWeight: '600' },
-  cardBody: { marginBottom: 12 },
-  info: { fontSize: SIZES.md, color: COLORS.black, marginBottom: 4 },
-  price: { fontSize: SIZES.lg, fontWeight: 'bold', color: COLORS.primary, marginTop: 4 },
-  notes: { fontSize: SIZES.sm, color: COLORS.gray, marginTop: 4, fontStyle: 'italic' },
+  pageTitle: { fontFamily: FONTS.bold, fontSize: 22, color: COLORS.textPrimary },
+  pageCount: { fontFamily: FONTS.medium, fontSize: SIZES.sm, color: COLORS.textMuted },
+  list: { padding: SIZES.padding, paddingBottom: 100 },
+
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radiusLg,
+    marginBottom: 12,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  statusStrip: { width: 4 },
+  cardInner: { flex: 1, padding: 14 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
+  cardHeaderLeft: { flex: 1, marginRight: 8 },
+  serviceName: { fontFamily: FONTS.semiBold, fontSize: SIZES.lg, color: COLORS.textPrimary },
+  personName: { fontFamily: FONTS.regular, fontSize: SIZES.sm, color: COLORS.textSecondary, marginTop: 2 },
+  statusBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12,
+  },
+  statusText: { fontFamily: FONTS.semiBold, fontSize: 10, color: COLORS.white },
+
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  infoText: { fontFamily: FONTS.regular, fontSize: SIZES.sm, color: COLORS.textSecondary },
+
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
+  price: { fontFamily: FONTS.bold, fontSize: SIZES.xl, color: COLORS.primary },
   actions: { flexDirection: 'row', gap: 8 },
-  actionBtn: { flex: 1, padding: 10, borderRadius: SIZES.radius, alignItems: 'center' },
-  actionText: { color: COLORS.white, fontWeight: '600', fontSize: SIZES.sm },
-  emptyIcon: { fontSize: 60, marginBottom: 10 },
-  emptyText: { fontSize: SIZES.lg, color: COLORS.gray },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+
+  emptyState: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
+  emptyIconBox: {
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: COLORS.primary + '12',
+    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+  },
+  emptyTitle: { fontFamily: FONTS.semiBold, fontSize: SIZES.xl, color: COLORS.textPrimary, textAlign: 'center' },
+  emptySubtitle: { fontFamily: FONTS.regular, fontSize: SIZES.md, color: COLORS.textSecondary, textAlign: 'center', marginTop: 8 },
+  emptyBtn: {
+    marginTop: 24, backgroundColor: COLORS.primary,
+    paddingHorizontal: 28, paddingVertical: 14, borderRadius: SIZES.radiusLg,
+  },
+  emptyBtnText: { fontFamily: FONTS.semiBold, color: COLORS.white, fontSize: SIZES.md },
+
+  skeletonCard: {
+    backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg,
+    marginBottom: 12, overflow: 'hidden', flexDirection: 'row',
+  },
+  skeletonStrip: { width: 4, backgroundColor: COLORS.border },
+  skeletonContent: { flex: 1, padding: 14 },
+  skeletonLine: { backgroundColor: COLORS.border, borderRadius: 4 },
 });

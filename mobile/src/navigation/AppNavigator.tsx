@@ -2,10 +2,10 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { COLORS } from '../constants/theme';
+import { COLORS, FONTS } from '../constants/theme';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -18,6 +18,23 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const floatingTabBarStyle = {
+  height: 70,
+  paddingBottom: Platform.OS === 'ios' ? 16 : 12,
+  paddingTop: 8,
+  borderTopWidth: 0,
+  elevation: 20,
+  shadowColor: '#000',
+  shadowOpacity: 0.15,
+  shadowRadius: 20,
+  shadowOffset: { width: 0, height: -4 },
+  borderRadius: 24,
+  marginHorizontal: 12,
+  marginBottom: 8,
+  position: 'absolute' as const,
+  backgroundColor: COLORS.white,
+};
 
 function AuthStack() {
   return (
@@ -33,8 +50,14 @@ function CustomerTabs() {
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.gray,
-        tabBarStyle: { paddingBottom: 5, height: 60 },
+        tabBarInactiveTintColor: COLORS.textMuted,
+        tabBarStyle: floatingTabBarStyle,
+        tabBarLabelStyle: {
+          fontFamily: FONTS.medium,
+          fontSize: 11,
+          marginTop: -2,
+        },
+        headerShown: false,
       }}
     >
       <Tab.Screen
@@ -43,7 +66,6 @@ function CustomerTabs() {
         options={{
           title: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
-          headerTitle: 'Kuafor Randevu',
         }}
       />
       <Tab.Screen
@@ -52,7 +74,6 @@ function CustomerTabs() {
         options={{
           title: 'Kuaforler',
           tabBarIcon: ({ color, size }) => <Ionicons name="cut-outline" size={size} color={color} />,
-          headerTitle: 'Kuaforler',
         }}
       />
       <Tab.Screen
@@ -61,7 +82,6 @@ function CustomerTabs() {
         options={{
           title: 'Randevularim',
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
-          headerTitle: 'Randevularim',
         }}
       />
       <Tab.Screen
@@ -70,7 +90,6 @@ function CustomerTabs() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
-          headerTitle: 'Profilim',
         }}
       />
     </Tab.Navigator>
@@ -82,8 +101,14 @@ function ProviderTabs() {
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.gray,
-        tabBarStyle: { paddingBottom: 5, height: 60 },
+        tabBarInactiveTintColor: COLORS.textMuted,
+        tabBarStyle: floatingTabBarStyle,
+        tabBarLabelStyle: {
+          fontFamily: FONTS.medium,
+          fontSize: 11,
+          marginTop: -2,
+        },
+        headerShown: false,
       }}
     >
       <Tab.Screen
@@ -92,7 +117,6 @@ function ProviderTabs() {
         options={{
           title: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
-          headerTitle: 'Kuafor Paneli',
         }}
       />
       <Tab.Screen
@@ -101,7 +125,6 @@ function ProviderTabs() {
         options={{
           title: 'Randevular',
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
-          headerTitle: 'Gelen Randevular',
         }}
       />
       <Tab.Screen
@@ -110,7 +133,6 @@ function ProviderTabs() {
         options={{
           title: 'Hizmetlerim',
           tabBarIcon: ({ color, size }) => <Ionicons name="cut-outline" size={size} color={color} />,
-          headerTitle: 'Hizmetlerim',
         }}
       />
       <Tab.Screen
@@ -119,7 +141,6 @@ function ProviderTabs() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
-          headerTitle: 'Profilim',
         }}
       />
     </Tab.Navigator>
@@ -131,7 +152,7 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -150,11 +171,7 @@ export default function AppNavigator() {
             <Stack.Screen
               name="BookAppointment"
               component={BookAppointmentScreen}
-              options={{
-                headerShown: true,
-                headerTitle: 'Randevu Al',
-                headerTintColor: COLORS.primary,
-              }}
+              options={{ headerShown: false }}
             />
           </>
         )}
