@@ -6,6 +6,7 @@ import { ServiceRepository } from '../repositories/ServiceRepository';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { validateRequest } from '../middlewares/validateRequest';
 import { createAppointmentValidator } from '../validators/appointmentValidator';
+import { publicAppointmentLimiter } from '../middlewares/rateLimiter';
 
 const router = Router();
 
@@ -16,8 +17,7 @@ const appointmentService = new AppointmentService(appointmentRepository, service
 const appointmentController = new AppointmentController(appointmentService);
 
 // ─── ROUTES
-// Misafir: Giriş yapmadan randevu al (public) — ekstra validator yok
-router.post('/public', appointmentController.publicCreate);
+router.post('/public', publicAppointmentLimiter, appointmentController.publicCreate);
 
 // Kuaför ve tarih bazında randevuları getir (public erişim - web formu için auth yok)
 router.get(

@@ -51,6 +51,11 @@ export class UserRepository implements IUserRepository {
         return result.rows;
     }
 
+    async deleteById(id: string): Promise<boolean> {
+        const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
+        return (result.rowCount ?? 0) > 0;
+    }
+
     async update(id: string, data: Partial<User>): Promise<User | null> {
         const fields = Object.keys(data);
         const values = Object.values(data);

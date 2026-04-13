@@ -2,7 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants/theme';
 
@@ -41,26 +42,26 @@ function CustomerTabs() {
         component={HomeScreen}
         options={{
           title: 'Ana Sayfa',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
-          headerTitle: '💈 Kuaför Randevu',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          headerTitle: 'Kuafor Randevu',
         }}
       />
       <Tab.Screen
         name="Providers"
         component={ProvidersScreen}
         options={{
-          title: 'Kuaförler',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>💈</Text>,
-          headerTitle: '💈 Kuaförler',
+          title: 'Kuaforler',
+          tabBarIcon: ({ color, size }) => <Ionicons name="cut-outline" size={size} color={color} />,
+          headerTitle: 'Kuaforler',
         }}
       />
       <Tab.Screen
         name="Appointments"
         component={AppointmentsScreen}
         options={{
-          title: 'Randevularım',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>📅</Text>,
-          headerTitle: '📅 Randevularım',
+          title: 'Randevularim',
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+          headerTitle: 'Randevularim',
         }}
       />
       <Tab.Screen
@@ -68,8 +69,8 @@ function CustomerTabs() {
         component={ProfileScreen}
         options={{
           title: 'Profil',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
-          headerTitle: '👤 Profilim',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+          headerTitle: 'Profilim',
         }}
       />
     </Tab.Navigator>
@@ -90,8 +91,8 @@ function ProviderTabs() {
         component={HomeScreen}
         options={{
           title: 'Ana Sayfa',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
-          headerTitle: '💈 Kuaför Paneli',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          headerTitle: 'Kuafor Paneli',
         }}
       />
       <Tab.Screen
@@ -99,8 +100,8 @@ function ProviderTabs() {
         component={AppointmentsScreen}
         options={{
           title: 'Randevular',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>📅</Text>,
-          headerTitle: '📅 Gelen Randevular',
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+          headerTitle: 'Gelen Randevular',
         }}
       />
       <Tab.Screen
@@ -108,8 +109,8 @@ function ProviderTabs() {
         component={MyServicesScreen}
         options={{
           title: 'Hizmetlerim',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>✂️</Text>,
-          headerTitle: '✂️ Hizmetlerim',
+          tabBarIcon: ({ color, size }) => <Ionicons name="cut-outline" size={size} color={color} />,
+          headerTitle: 'Hizmetlerim',
         }}
       />
       <Tab.Screen
@@ -117,8 +118,8 @@ function ProviderTabs() {
         component={ProfileScreen}
         options={{
           title: 'Profil',
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
-          headerTitle: '👤 Profilim',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+          headerTitle: 'Profilim',
         }}
       />
     </Tab.Navigator>
@@ -151,7 +152,7 @@ export default function AppNavigator() {
               component={BookAppointmentScreen}
               options={{
                 headerShown: true,
-                headerTitle: '📅 Randevu Al',
+                headerTitle: 'Randevu Al',
                 headerTintColor: COLORS.primary,
               }}
             />

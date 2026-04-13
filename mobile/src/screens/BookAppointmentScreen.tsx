@@ -6,7 +6,6 @@ import {
 import api from '../services/api';
 import { appointmentService } from '../services/appointmentService';
 import { providerAppointmentService } from '../services/providerAppointmentService';
-import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES } from '../constants/theme';
 
 const TIME_SLOTS = [
@@ -17,9 +16,7 @@ const TIME_SLOTS = [
 
 export default function BookAppointmentScreen({ route, navigation }: any) {
   const { provider } = route.params;
-  const { user } = useAuth();
   const [services, setServices] = useState<any[]>([]);
-  const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -27,8 +24,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [busySlots, setBusySlots] = useState<string[]>([]);
-  const [guestName, setGuestName] = useState('');
-  const [guestPhone, setGuestPhone] = useState('');
+  
 
   // Sonraki 7 günü oluştur
   const dates = Array.from({ length: 7 }, (_, i) => {
@@ -75,43 +71,19 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
     }
   }, [selectedDate, provider?.id]);
 
-  const getTotalDuration = () => selectedServices.reduce((sum, s) => sum + Number(s.duration_minutes), 0);
   const getTotalPrice = () => selectedServices.reduce((sum, s) => sum + Number(s.price), 0);
-
-  const handleGuestPhoneChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    let formatted = digits;
-    if (digits.length > 4 && digits.length <= 7) {
-      formatted = `${digits.slice(0, 4)} ${digits.slice(4)}`;
-    } else if (digits.length > 7 && digits.length <= 9) {
-      formatted = `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-    } else if (digits.length > 9) {
-      formatted = `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}`;
-    }
-    setGuestPhone(formatted);
-  };
 
   const handleBook = async () => {
     if (selectedServices.length === 0 || !selectedDate || !selectedTime) {
-      Alert.alert('Hata', 'Lütfen en az bir hizmet, tarih ve saat seçin');
+      Alert.alert('Hata', 'Lutfen en az bir hizmet, tarih ve saat secin');
       return;
-    }
-
-    // Misafir kullanıcı ise ad ve telefon zorunlu
-    if (!user) {
-      const phoneDigits = guestPhone.replace(/\D/g, '');
-      if (!guestName || phoneDigits.length !== 11) {
-        Alert.alert('Hata', 'Lütfen ad soyad ve 11 haneli telefon numarası girin');
-        return;
-      }
     }
 
     setSubmitting(true);
     try {
       const serviceIds = selectedServices.map((s) => s.id);
       const totalPrice = getTotalPrice();
-      // LOG: API'ye gönderilen veriyi konsola yazdır
-      console.log({
+      await appointmentService.create({
         provider_id: provider.id,
         service_ids: serviceIds,
         appointment_date: selectedDate,
@@ -119,39 +91,13 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         total_price: totalPrice,
         notes: notes || undefined,
       });
-
-      if (user) {
-        // Uygulama içi, giriş yapmış müşteri
-        await appointmentService.create({
-          provider_id: provider.id,
-          service_ids: serviceIds,
-          appointment_date: selectedDate,
-          start_time: selectedTime,
-          total_price: totalPrice,
-          notes: notes || undefined,
-        });
-      } else {
-        // Linkten gelen misafir kullanıcı
-        const phoneDigits = guestPhone.replace(/\D/g, '');
-        await api.post('/appointments/public', {
-          full_name: guestName,
-          phone: phoneDigits,
-          provider_id: provider.id,
-          service_ids: serviceIds,
-          appointment_date: selectedDate,
-          start_time: selectedTime,
-          total_price: totalPrice,
-          notes: notes || undefined,
-        });
-      }
-      Alert.alert('Başarılı! 🎉', 'Randevunuz oluşturuldu', [
+      Alert.alert('Basarili!', 'Randevunuz olusturuldu', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Randevu oluşturulamadı';
       const details = error.response?.data?.errors;
       Alert.alert('Hata', msg + (details ? '\n' + JSON.stringify(details) : ''));
-      console.log('Doğrulama detayları:', details);
     } finally {
       setSubmitting(false);
     }
@@ -169,12 +115,12 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Kuaför Bilgisi */}
       <View style={styles.providerCard}>
-        <Text style={styles.providerName}>💈 {provider.full_name}</Text>
-        <Text style={styles.providerPhone}>📞 {provider.phone}</Text>
+        <Text style={styles.providerName}>{provider.full_name}</Text>
+        <Text style={styles.providerPhone}>{provider.phone}</Text>
       </View>
 
       {/* Hizmet Seçimi */}
-      <Text style={styles.sectionTitle}>✂️ Hizmet Seçin</Text>
+      <Text style={styles.sectionTitle}>Hizmet Secin</Text>
       <View style={styles.grid}>
         {services.map((service) => {
           const isSelected = selectedServices.some((s) => s.id === service.id);
@@ -193,7 +139,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
               <Text style={[styles.serviceName, isSelected && styles.selectedText]}>
                 {service.name}
               </Text>
-              <Text style={styles.serviceDetail}>⏱ {service.duration_minutes} dk</Text>
+              <Text style={styles.serviceDetail}>{service.duration_minutes} dk</Text>
               <Text style={[styles.servicePrice, isSelected && styles.selectedText]}>
                 {service.price} TL
               </Text>
@@ -203,7 +149,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       </View>
 
       {/* Tarih Seçimi */}
-      <Text style={styles.sectionTitle}>📅 Tarih Seçin</Text>
+      <Text style={styles.sectionTitle}>Tarih Secin</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateRow}>
         {dates.map((d) => (
           <TouchableOpacity
@@ -245,7 +191,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
       </View>
 
       {/* Not */}
-      <Text style={styles.sectionTitle}>📝 Not (opsiyonel)</Text>
+      <Text style={styles.sectionTitle}>Not (opsiyonel)</Text>
       <TextInput
         style={styles.noteInput}
         placeholder="Örn: Kısa kesim istiyorum"
@@ -255,39 +201,16 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         placeholderTextColor={COLORS.gray}
       />
 
-      {/* Misafir bilgileri (giriş yoksa) */}
-      {!user && (
-        <>
-          <Text style={styles.sectionTitle}>👤 Bilgileriniz</Text>
-          <TextInput
-            style={styles.noteInput}
-            placeholder="Ad Soyad"
-            value={guestName}
-            onChangeText={setGuestName}
-            placeholderTextColor={COLORS.gray}
-          />
-          <TextInput
-            style={styles.noteInput}
-            placeholder="05XX XXX XX XX"
-            value={guestPhone}
-            onChangeText={handleGuestPhoneChange}
-            keyboardType="phone-pad"
-            placeholderTextColor={COLORS.gray}
-            maxLength={14}
-          />
-        </>
-      )}
-
-      {/* Özet & Randevu Al */}
+      {/* Ozet & Randevu Al */}
       {selectedServices.length > 0 && selectedDate && selectedTime && (
         <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>📋 Özet</Text>
+          <Text style={styles.summaryTitle}>Ozet</Text>
           {selectedServices.map((service) => (
-            <Text key={service.id} style={styles.summaryText}>✂️ {service.name} ({service.price} TL)</Text>
+            <Text key={service.id} style={styles.summaryText}>{service.name} ({service.price} TL)</Text>
           ))}
-          <Text style={styles.summaryText}>📅 {selectedDate}</Text>
-          <Text style={styles.summaryText}>🕐 {selectedTime}</Text>
-          <Text style={styles.summaryPrice}>💰 Toplam: {selectedServices.reduce((sum, s) => sum + Number(s.price), 0)} TL</Text>
+          <Text style={styles.summaryText}>{selectedDate}</Text>
+          <Text style={styles.summaryText}>{selectedTime}</Text>
+          <Text style={styles.summaryPrice}>Toplam: {selectedServices.reduce((sum, s) => sum + Number(s.price), 0)} TL</Text>
         </View>
       )}
 
@@ -299,7 +222,7 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
         {submitting ? (
           <ActivityIndicator color={COLORS.white} />
         ) : (
-          <Text style={styles.bookButtonText}>📅 Randevu Al</Text>
+          <Text style={styles.bookButtonText}>Randevu Al</Text>
         )}
       </TouchableOpacity>
     </ScrollView>

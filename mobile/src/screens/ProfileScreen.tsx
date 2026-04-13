@@ -2,17 +2,41 @@ import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import { COLORS, SIZES } from '../constants/theme';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    Alert.alert('Çıkış', 'Çıkış yapmak istiyor musunuz?', [
-      { text: 'Hayır', style: 'cancel' },
+    Alert.alert('Cikis', 'Cikis yapmak istiyor musunuz?', [
+      { text: 'Hayir', style: 'cancel' },
       { text: 'Evet', onPress: logout },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Hesabi Sil',
+      'Hesabiniz ve tum verileriniz kalici olarak silinecek. Bu islem geri alinamaz. Devam etmek istiyor musunuz?',
+      [
+        { text: 'Vazgec', style: 'cancel' },
+        {
+          text: 'Hesabimi Sil',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete('/auth/account');
+              await logout();
+            } catch (error: any) {
+              Alert.alert('Hata', error.response?.data?.message || 'Hesap silinemedi');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -26,25 +50,25 @@ export default function ProfileScreen() {
         <Text style={styles.name}>{user?.full_name}</Text>
         <View style={styles.roleBadge}>
           <Text style={styles.roleText}>
-            {user?.role === 'provider' ? '💈 Kuaför' : '👤 Müşteri'}
+            {user?.role === 'provider' ? 'Kuafor' : 'Musteri'}
           </Text>
         </View>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>📋 Hesap Bilgileri</Text>
+        <Text style={styles.sectionTitle}>Hesap Bilgileri</Text>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>📧 Email</Text>
+          <Text style={styles.infoLabel}>Email</Text>
           <Text style={styles.infoValue}>{user?.email}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>📞 Telefon</Text>
+          <Text style={styles.infoLabel}>Telefon</Text>
           <Text style={styles.infoValue}>{user?.phone || 'Belirtilmemiş'}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>👤 Hesap Türü</Text>
+          <Text style={styles.infoLabel}>Hesap Turu</Text>
           <Text style={styles.infoValue}>
             {user?.role === 'provider' ? 'Kuaför' : 'Müşteri'}
           </Text>
@@ -52,7 +76,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>ℹ️ Uygulama Hakkında</Text>
+        <Text style={styles.sectionTitle}>Uygulama Hakkinda</Text>
         <Text style={styles.aboutText}>Kuaför Randevu Sistemi v1.0</Text>
         <Text style={styles.aboutDesc}>
           Online kuaför randevu alma ve yönetim uygulaması.
@@ -60,7 +84,11 @@ export default function ProfileScreen() {
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>🚪 Çıkış Yap</Text>
+        <Text style={styles.logoutText}>Cikis Yap</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+        <Text style={styles.deleteText}>Hesabimi Sil</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -100,4 +128,10 @@ const styles = StyleSheet.create({
     padding: 16, alignItems: 'center', marginTop: 8,
   },
   logoutText: { color: COLORS.white, fontSize: SIZES.lg, fontWeight: 'bold' },
+  deleteButton: {
+    backgroundColor: 'transparent', borderRadius: SIZES.radius,
+    padding: 16, alignItems: 'center', marginTop: 12,
+    borderWidth: 1, borderColor: COLORS.danger,
+  },
+  deleteText: { color: COLORS.danger, fontSize: SIZES.md, fontWeight: '600' },
 });

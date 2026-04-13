@@ -64,7 +64,6 @@ export default function RegisterScreen({ navigation }: any) {
     try {
       await register({ full_name: fullName, email, phone: phoneDigits, password, role });
     } catch (error: any) {
-      console.log('Kayıt hata detay:', error.response?.data);
       const apiData = error.response?.data;
       const baseMessage = apiData?.message || 'Kayıt başarısız';
       const fieldErrors = Array.isArray(apiData?.errors)

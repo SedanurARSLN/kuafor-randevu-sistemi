@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, User, LoginData, RegisterData } from '../services/authService';
+import { setOnUnauthorized } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -17,9 +18,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Uygulama açıldığında kayıtlı kullanıcıyı kontrol et
   useEffect(() => {
     checkAuth();
+    setOnUnauthorized(() => setUser(null));
   }, []);
 
   const checkAuth = async () => {
@@ -30,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(savedUser);
       }
     } catch (error) {
-      console.log('Auth check failed');
+      // silent fail - user stays logged out
     } finally {
       setLoading(false);
     }

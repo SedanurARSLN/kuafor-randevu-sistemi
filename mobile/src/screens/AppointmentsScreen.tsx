@@ -9,16 +9,17 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { appointmentService } from '../services/appointmentService';
 import { COLORS, SIZES } from '../constants/theme';
 
-const STATUS_MAP: any = {
-  pending: { label: '⏳ Bekliyor', color: COLORS.pending },
-  confirmed: { label: '✅ Onaylandı', color: COLORS.confirmed },
-  cancelled: { label: '❌ İptal', color: COLORS.cancelled },
-  completed: { label: '✔️ Tamamlandı', color: COLORS.completed },
+const STATUS_MAP: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
+  pending: { label: 'Bekliyor', color: COLORS.pending, icon: 'time-outline' },
+  confirmed: { label: 'Onaylandi', color: COLORS.confirmed, icon: 'checkmark-circle-outline' },
+  cancelled: { label: 'Iptal', color: COLORS.cancelled, icon: 'close-circle-outline' },
+  completed: { label: 'Tamamlandi', color: COLORS.completed, icon: 'checkmark-done-outline' },
 };
 
 export default function AppointmentsScreen() {
@@ -90,20 +91,21 @@ export default function AppointmentsScreen() {
             <Text style={styles.serviceName}>{item.service_name}</Text>
             <Text style={styles.personName}>
               {user?.role === 'provider'
-                ? `👤 ${item.customer_name}`
-                : `💈 ${item.provider_name}`}
+                ? item.customer_name
+                : item.provider_name}
             </Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: status.color + '20' }]}>
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+            <Ionicons name={status.icon} size={14} color={status.color} />
+            <Text style={[styles.statusText, { color: status.color, marginLeft: 4 }]}>{status.label}</Text>
           </View>
         </View>
 
         <View style={styles.cardBody}>
-          <Text style={styles.info}>📅 {formatDate(item.appointment_date)}</Text>
-          <Text style={styles.info}>🕐 {item.start_time?.slice(0, 5)} - {item.end_time?.slice(0, 5)}</Text>
-          <Text style={styles.price}>💰 {item.total_price} TL</Text>
-          {item.notes && <Text style={styles.notes}>📝 {item.notes}</Text>}
+          <Text style={styles.info}>{formatDate(item.appointment_date)}</Text>
+          <Text style={styles.info}>{item.start_time?.slice(0, 5)} - {item.end_time?.slice(0, 5)}</Text>
+          <Text style={styles.price}>{item.total_price} TL</Text>
+          {item.notes && <Text style={styles.notes}>{item.notes}</Text>}
         </View>
 
         {/* Aksiyon Butonları */}
@@ -113,7 +115,7 @@ export default function AppointmentsScreen() {
               style={[styles.actionBtn, { backgroundColor: COLORS.success }]}
               onPress={() => handleAction(item.id, 'confirm')}
             >
-              <Text style={styles.actionText}>✅ Onayla</Text>
+              <Text style={styles.actionText}>Onayla</Text>
             </TouchableOpacity>
           )}
 
@@ -122,7 +124,7 @@ export default function AppointmentsScreen() {
               style={[styles.actionBtn, { backgroundColor: COLORS.completed }]}
               onPress={() => handleAction(item.id, 'complete')}
             >
-              <Text style={styles.actionText}>✔️ Tamamla</Text>
+              <Text style={styles.actionText}>Tamamla</Text>
             </TouchableOpacity>
           )}
 
@@ -131,7 +133,7 @@ export default function AppointmentsScreen() {
               style={[styles.actionBtn, { backgroundColor: COLORS.danger }]}
               onPress={() => handleAction(item.id, 'cancel')}
             >
-              <Text style={styles.actionText}>❌ İptal</Text>
+              <Text style={styles.actionText}>Iptal</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -159,7 +161,7 @@ export default function AppointmentsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyIcon}>📅</Text>
+            <Ionicons name="calendar-outline" size={60} color={COLORS.gray} />
             <Text style={styles.emptyText}>Henüz randevunuz yok</Text>
           </View>
         }
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
   },
   serviceName: { fontSize: SIZES.xl, fontWeight: 'bold', color: COLORS.black },
   personName: { fontSize: SIZES.md, color: COLORS.gray, marginTop: 4 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: SIZES.sm, fontWeight: '600' },
   cardBody: { marginBottom: 12 },
   info: { fontSize: SIZES.md, color: COLORS.black, marginBottom: 4 },

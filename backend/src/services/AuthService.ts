@@ -103,6 +103,15 @@ export class AuthService {
         return providers.map(user => this.toUserResponse(user));
     }
 
+    // ─── HESAP SIL
+    async deleteAccount(userId: string): Promise<void> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            throw new AppError('Kullanici bulunamadi', 404);
+        }
+        await this.userRepository.deleteById(userId);
+    }
+
     // ─── KUAFÖRÜN HİZMETLERİNİ GETİR
     async getProviderServices(providerId: string): Promise<any[]> {
         const services = await this.userRepository.getProviderServices(providerId);

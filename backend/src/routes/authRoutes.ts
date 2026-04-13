@@ -5,6 +5,7 @@ import { UserRepository } from '../repositories/UserRepository';
 import { validateRequest } from '../middlewares/validateRequest';
 import { registerCustomerValidator, registerProviderValidator, loginValidator } from '../validators/authValidator';
 import { authenticate } from '../middlewares/authMiddleware';
+import { authLimiter } from '../middlewares/rateLimiter';
 import pool from '../config/database';
 
 const router = Router();
@@ -13,10 +14,11 @@ const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
 const authController = new AuthController(authService);
 
-router.post('/register/customer', registerCustomerValidator, validateRequest, authController.registerCustomer);
-router.post('/register/provider', registerProviderValidator, validateRequest, authController.registerProvider);
-router.post('/login', loginValidator, validateRequest, authController.login);
+router.post('/register/customer', authLimiter, registerCustomerValidator, validateRequest, authController.registerCustomer);
+router.post('/register/provider', authLimiter, registerProviderValidator, validateRequest, authController.registerProvider);
+router.post('/login', authLimiter, loginValidator, validateRequest, authController.login);
 router.get('/profile', authenticate, authController.getProfile);
+router.delete('/account', authenticate, authController.deleteAccount);
 router.get('/providers', authController.getAllProviders);
 router.get('/providers/:id/services', authController.getProviderServices);
 
@@ -36,6 +38,8 @@ router.get('/book/:providerId', async (req, res) => {
             'SELECT * FROM services WHERE provider_id = $1 AND is_active = true',
             [req.params.providerId]
         );
+
+        const esc = (str: string) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
         const p = provider.rows[0];
         const svcs = services.rows;
@@ -58,7 +62,7 @@ router.get('/book/:providerId', async (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${p.full_name} - Randevu Al</title>
+    <title>${esc(p.full_name)} - Randevu Al</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFC; color: #1E293B; }
@@ -103,8 +107,8 @@ router.get('/book/:providerId', async (req, res) => {
 <body>
     <div class="container">
         <div class="header">
-            <h1>💈 ${p.full_name}</h1>
-            <p>📞 ${p.phone}</p>
+            <h1>${esc(p.full_name)}</h1>
+            <p>${esc(p.phone)}</p>
             <p style="margin-top:8px; font-size:16px;">Online Randevu Al</p>
         </div>
 
@@ -125,10 +129,10 @@ router.get('/book/:providerId', async (req, res) => {
                 <h2>✂️ Hizmet Seçin</h2>
                 <div id="servicesList">
                     ${svcs.map(s => `
-                        <div class="card" onclick="toggleService('${s.id}', '${s.name}', ${s.price}, ${s.duration_minutes}, this)">
-                            <h3>${s.name}</h3>
-                            <div class="meta">⏱ ${s.duration_minutes} dk</div>
-                            <div class="price">${s.price} TL</div>
+                        <div class="card" onclick="toggleService('${esc(s.id)}', '${esc(s.name)}', ${Number(s.price)}, ${Number(s.duration_min)}, this)">
+                            <h3>${esc(s.name)}</h3>
+                            <div class="meta">⏱ ${Number(s.duration_min)} dk</div>
+                            <div class="price">${Number(s.price)} TL</div>
                         </div>
                     `).join('')}
                 </div>

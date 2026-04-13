@@ -8,5 +8,6 @@ export interface IUserRepository {
     findByRole(role: string): Promise<User[]>;
     findByPhone(phone: string): Promise<User | null>;
     getProviderServices(providerId: string): Promise<any[]>;
+    deleteById(id: string): Promise<boolean>;
     update(id: string, data: Partial<User>): Promise<User | null>;
 }

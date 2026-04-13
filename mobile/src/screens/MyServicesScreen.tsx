@@ -4,6 +4,7 @@ import {
   Alert, ActivityIndicator, Modal, TextInput, RefreshControl,
   KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { COLORS, SIZES } from '../constants/theme';
@@ -114,7 +115,7 @@ export default function MyServicesScreen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-        <Text style={styles.addButtonText}>➕ Yeni Hizmet Ekle</Text>
+        <Text style={styles.addButtonText}>Yeni Hizmet Ekle</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -127,7 +128,7 @@ export default function MyServicesScreen() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.serviceName}>✂️ {item.name}</Text>
+              <Text style={styles.serviceName}>{item.name}</Text>
               <View style={[styles.badge, { backgroundColor: item.is_active ? COLORS.success + '20' : COLORS.danger + '20' }]}>
                 <Text style={{ color: item.is_active ? COLORS.success : COLORS.danger, fontSize: SIZES.sm, fontWeight: '600' }}>
                   {item.is_active ? 'Aktif' : 'Pasif'}
@@ -136,28 +137,28 @@ export default function MyServicesScreen() {
             </View>
             {item.description && <Text style={styles.desc}>{item.description}</Text>}
             <View style={styles.details}>
-              <Text style={styles.detail}>⏱ {item.duration_minutes} dk</Text>
-              <Text style={styles.price}>💰 {item.price} TL</Text>
+              <Text style={styles.detail}>{item.duration_minutes} dk</Text>
+              <Text style={styles.price}>{item.price} TL</Text>
             </View>
             <View style={styles.actions}>
               <TouchableOpacity
                 style={[styles.actionBtn, { backgroundColor: COLORS.primary }]}
                 onPress={() => openEditModal(item)}
               >
-                <Text style={styles.actionText}>✏️ Düzenle</Text>
+                <Text style={styles.actionText}>Duzenle</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, { backgroundColor: COLORS.danger }]}
                 onPress={() => handleDelete(item.id, item.name)}
               >
-                <Text style={styles.actionText}>🗑 Sil</Text>
+                <Text style={styles.actionText}>Sil</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={{ fontSize: 50 }}>✂️</Text>
+            <Ionicons name="cut-outline" size={50} color={COLORS.gray} />
             <Text style={styles.emptyText}>Henüz hizmet eklemediniz</Text>
           </View>
         }
@@ -186,7 +187,7 @@ export default function MyServicesScreen() {
                 </TouchableOpacity>
 
                 <Text style={styles.modalTitle}>
-                  {editingService ? '✏️ Hizmet Düzenle' : '➕ Yeni Hizmet'}
+                  {editingService ? 'Hizmet Duzenle' : 'Yeni Hizmet'}
                 </Text>
 
                 <Text style={styles.label}>Hizmet Adı</Text>

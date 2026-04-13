@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Share,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { appointmentService } from '../services/appointmentService';
@@ -46,7 +47,7 @@ export default function HomeScreen({ navigation }: any) {
         completed: appointments.filter((a: any) => a.status === 'completed').length,
       });
     } catch {
-      console.log('Stats yüklenemedi');
+      // silent fail
     }
   };
 
@@ -55,7 +56,7 @@ export default function HomeScreen({ navigation }: any) {
       const data = await providerAppointmentService.getEarnings();
       setEarnings(data);
     } catch {
-      console.log('Kazanç yüklenemedi');
+      // silent fail
     }
   };
 
@@ -64,7 +65,7 @@ export default function HomeScreen({ navigation }: any) {
       const bookingUrl = `https://kuafor-randevu-sistemi-3shp.onrender.com/api/auth/book/${user?.id}`;
       await Share.share({ message: bookingUrl });
     } catch {
-      console.log('Paylaşım hatası');
+      // silent fail
     }
   };
 
@@ -74,10 +75,10 @@ export default function HomeScreen({ navigation }: any) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Merhaba 👋</Text>
+        <Text style={styles.greeting}>Merhaba,</Text>
         <Text style={styles.name}>{user?.full_name}</Text>
         <Text style={styles.role}>
-          {isProvider ? '💈 Kuaför' : '👤 Müşteri'}
+          {isProvider ? 'Kuafor' : 'Musteri'}
         </Text>
       </View>
 
@@ -146,55 +147,55 @@ export default function HomeScreen({ navigation }: any) {
       )}
 
       {/* ════ Hızlı Erişim ════ */}
-      <Text style={styles.sectionTitle}>⚡ Hızlı Erişim</Text>
+      <Text style={styles.sectionTitle}>Hizli Erisim</Text>
 
       {!isProvider ? (
         <>
           <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Providers')}>
-            <Text style={styles.cardIcon}>💈</Text>
+            <Ionicons name="cut" size={32} color={COLORS.primary} />
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Randevu Al</Text>
-              <Text style={styles.cardDesc}>Kuaför seçip randevu oluşturun</Text>
+              <Text style={styles.cardDesc}>Kuafor secip randevu olusturun</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.gray} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Appointments')}>
-            <Text style={styles.cardIcon}>📅</Text>
+            <Ionicons name="calendar" size={32} color={COLORS.primary} />
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Randevularım</Text>
-              <Text style={styles.cardDesc}>Tüm randevularınızı görün</Text>
+              <Text style={styles.cardTitle}>Randevularim</Text>
+              <Text style={styles.cardDesc}>Tum randevularinizi gorun</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.gray} />
           </TouchableOpacity>
         </>
       ) : (
         <>
           <TouchableOpacity style={styles.shareCard} onPress={handleShareLink}>
-            <Text style={styles.cardIcon}>🔗</Text>
+            <Ionicons name="share-social" size={32} color={COLORS.success} />
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Randevu Linki Paylaş</Text>
-              <Text style={styles.cardDesc}>WhatsApp / SMS ile müşteriye gönderin</Text>
+              <Text style={styles.cardTitle}>Randevu Linki Paylas</Text>
+              <Text style={styles.cardDesc}>WhatsApp / SMS ile musteriye gonderin</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.gray} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Appointments')}>
-            <Text style={styles.cardIcon}>📅</Text>
+            <Ionicons name="calendar" size={32} color={COLORS.primary} />
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Gelen Randevular</Text>
-              <Text style={styles.cardDesc}>Randevuları yönetin</Text>
+              <Text style={styles.cardDesc}>Randevulari yonetin</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.gray} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('MyServices')}>
-            <Text style={styles.cardIcon}>✂️</Text>
+            <Ionicons name="cut" size={32} color={COLORS.primary} />
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Hizmetlerim</Text>
-              <Text style={styles.cardDesc}>Hizmet ekle ve düzenle</Text>
+              <Text style={styles.cardDesc}>Hizmet ekle ve duzenle</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.gray} />
           </TouchableOpacity>
         </>
       )}
@@ -315,7 +316,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1, shadowRadius: 8, elevation: 3,
   },
-  cardIcon: { fontSize: 36 },
+  cardIcon: { fontSize: 36, width: 36, textAlign: 'center' as const },
   cardContent: { flex: 1, marginLeft: 14 },
   cardTitle: { fontSize: SIZES.lg, fontWeight: 'bold', color: COLORS.black },
   cardDesc: { fontSize: SIZES.md, color: COLORS.gray, marginTop: 2 },

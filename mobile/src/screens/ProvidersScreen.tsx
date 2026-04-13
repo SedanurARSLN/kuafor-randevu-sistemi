@@ -21,7 +21,7 @@ export default function ProvidersScreen({ navigation }: any) {
       const response = await api.get('/auth/providers');
       setProviders(response.data.data);
     } catch (error) {
-      console.log('Kuaförler yüklenemedi');
+      // silent fail
     } finally {
       setLoading(false);
     }
@@ -52,8 +52,8 @@ export default function ProvidersScreen({ navigation }: any) {
               </Text>
             </View>
             <View style={styles.info}>
-              <Text style={styles.name}>💈 {item.full_name}</Text>
-              <Text style={styles.phone}>📞 {item.phone}</Text>
+              <Text style={styles.name}>{item.full_name}</Text>
+              <Text style={styles.phone}>{item.phone}</Text>
             </View>
             <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>

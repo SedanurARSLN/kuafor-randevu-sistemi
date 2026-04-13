@@ -81,6 +81,24 @@ export class AuthController {
         }
     };
 
+    // DELETE /api/auth/account
+    deleteAccount = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            await this.authService.deleteAccount(userId);
+            res.status(200).json({
+                success: true,
+                message: 'Hesabiniz basariyla silindi',
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     // GET /api/auth/providers - Tüm kuaförleri listele
     getAllProviders = async (
         req: AuthRequest,

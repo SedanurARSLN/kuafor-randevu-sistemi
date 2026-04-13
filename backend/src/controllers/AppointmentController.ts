@@ -31,8 +31,6 @@ export class AppointmentController {
     // POST /api/appointments/public — Misafir randevu (giriş yok)
     publicCreate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            console.log('📥 PUBLIC APPOINTMENT REQUEST BODY:', req.body);
-
             const { full_name, phone, ...appointmentData } = req.body;
 
             const safeName = (full_name && String(full_name).trim()) || 'Misafir Müşteri';
