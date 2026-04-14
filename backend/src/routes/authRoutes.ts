@@ -18,7 +18,10 @@ router.post('/register/customer', authLimiter, registerCustomerValidator, valida
 router.post('/register/provider', authLimiter, registerProviderValidator, validateRequest, authController.registerProvider);
 router.post('/login', authLimiter, loginValidator, validateRequest, authController.login);
 router.get('/profile', authenticate, authController.getProfile);
+router.patch('/profile', authenticate, authController.updateProfile);
 router.delete('/account', authenticate, authController.deleteAccount);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/reset-password', authLimiter, authController.resetPassword);
 router.get('/providers', authController.getAllProviders);
 router.get('/providers/:id/services', authController.getProviderServices);
 

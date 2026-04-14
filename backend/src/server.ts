@@ -8,11 +8,15 @@ import createTables from './config/migration';
 import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
+import paymentRoutes from './routes/paymentRoutes';
 
 const app = express();
 
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors());
+app.use(cors({
+    origin: config.allowedOrigins,
+    credentials: true,
+}));
 app.use(generalLimiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -54,6 +58,7 @@ h1{color:#2563EB}h2{color:#1D4ED8;margin-top:24px}p{margin:8px 0}</style></head>
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // ─── Error Handler
 app.use(errorHandler);

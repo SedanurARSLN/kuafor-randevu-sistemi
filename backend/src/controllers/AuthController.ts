@@ -99,6 +99,60 @@ export class AuthController {
         }
     };
 
+    // POST /api/auth/forgot-password
+    forgotPassword = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            await this.authService.forgotPassword(req.body.email);
+            res.status(200).json({
+                success: true,
+                message: 'Sıfırlama kodu e-posta adresinize gönderildi',
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // POST /api/auth/reset-password
+    resetPassword = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const { email, code, new_password } = req.body;
+            await this.authService.resetPassword(email, code, new_password);
+            res.status(200).json({
+                success: true,
+                message: 'Şifreniz başarıyla güncellendi',
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // PATCH /api/auth/profile
+    updateProfile = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            const result = await this.authService.updateProfile(userId, req.body);
+            res.status(200).json({
+                success: true,
+                message: 'Profil güncellendi',
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     // GET /api/auth/providers - Tüm kuaförleri listele
     getAllProviders = async (
         req: AuthRequest,

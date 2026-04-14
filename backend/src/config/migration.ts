@@ -60,6 +60,21 @@ const createTables = async () => {
             created_at      TIMESTAMP DEFAULT NOW()
         );
 
+        -- Ödeme alanları
+        ALTER TABLE appointments
+            ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'pending'
+                CHECK (payment_status IN ('pending', 'paid', 'refunded'));
+
+        ALTER TABLE appointments
+            ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;
+
+        -- Şifre sıfırlama alanları
+        ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS reset_code VARCHAR(6);
+
+        ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS reset_code_expires TIMESTAMP;
+
         CREATE INDEX IF NOT EXISTS idx_appointments_customer ON appointments(customer_id);
         CREATE INDEX IF NOT EXISTS idx_appointments_provider ON appointments(provider_id);
         CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);

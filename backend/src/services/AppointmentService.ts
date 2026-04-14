@@ -51,32 +51,41 @@ export class AppointmentService {
         if (appointmentDate < today) {
             throw new AppError('Geçmiş tarihe randevu alınamaz', 400);
         }
-        // Toplam fiyat: Gönderilmediyse seçilen hizmetlerden hesapla
-        let totalPrice: number;
-        if (dto.total_price != null && !Number.isNaN(Number(dto.total_price))) {
-            totalPrice = Number(dto.total_price);
-        } else {
-            totalPrice = 0;
-            for (const svc of validServices) {
-                totalPrice += Number(svc.price);
-            }
+
+        // Fiyatı her zaman sunucu tarafında hesapla (istemci değerini yoksay)
+        let totalPrice = 0;
+        let totalDuration = 0;
+        for (const svc of validServices) {
+            totalPrice += Number(svc.price);
+            totalDuration += Number((svc as any).duration_minutes ?? (svc as any).duration_min ?? 30);
         }
-        // Çakışma kontrolü (sadece başlangıç saati ile)
+
+        // end_time hesapla
+        const [startH, startM] = dto.start_time.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = startMinutes + totalDuration;
+        const endH = Math.floor(endMinutes / 60);
+        const endM = endMinutes % 60;
+        const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+        // Zaman aralığı bazlı çakışma kontrolü
         const conflicts = await this.appointmentRepository.findConflicting(
             dto.provider_id,
             dto.appointment_date,
-            dto.start_time
+            dto.start_time,
+            endTime
         );
         if (conflicts.length > 0) {
             throw new AppError('Bu saatte zaten bir randevu var', 409);
         }
-        // Randevu oluştur
+
         const appointment = await this.appointmentRepository.create(
             customerId,
             dto.provider_id,
-            incomingServiceIds.join(','), // Çoklu hizmet için string olarak kaydedilecek
+            incomingServiceIds.join(','),
             dto.appointment_date,
             dto.start_time,
+            endTime,
             totalPrice,
             dto.notes
         );

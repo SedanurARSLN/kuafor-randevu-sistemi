@@ -10,16 +10,17 @@ export class AppointmentRepository implements IAppointmentRepository {
         serviceIds: string,
         appointmentDate: string,
         startTime: string,
+        endTime: string,
         totalPrice: number,
         notes?: string
     ): Promise<Appointment> {
         const query = `
             INSERT INTO appointments 
-            (customer_id, provider_id, service_id, appointment_date, start_time, total_price, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            (customer_id, provider_id, service_id, appointment_date, start_time, end_time, total_price, notes)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `;
-        const values = [customerId, providerId, serviceIds, appointmentDate, startTime, totalPrice, notes || null];
+        const values = [customerId, providerId, serviceIds, appointmentDate, startTime, endTime, totalPrice, notes || null];
         const result = await pool.query(query, values);
         return result.rows[0];
     }
@@ -61,25 +62,20 @@ export class AppointmentRepository implements IAppointmentRepository {
         return result.rows;
     }
 
-        async findByProviderAndDate(providerId: string, date: string): Promise<any[]> {
-            const query = `
-                SELECT 
-                    a.*,
-                    c.full_name as customer_name,
-                    array_agg(s.name) as service_names,
-                    array_agg(s.price) as service_prices
-                FROM appointments a
-                JOIN users c ON a.customer_id = c.id
-                JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
-                WHERE a.provider_id = $1
-                AND a.appointment_date = $2
-                AND a.status NOT IN ('cancelled')
-                GROUP BY a.id, c.full_name
-                ORDER BY a.start_time ASC
-            `;
-            const result = await pool.query(query, [providerId, date]);
-            return result.rows;
-        }
+    async findByProviderAndDate(providerId: string, date: string): Promise<any[]> {
+        const query = `
+            SELECT 
+                a.id, a.start_time, a.end_time, a.status
+            FROM appointments a
+            WHERE a.provider_id = $1
+            AND a.appointment_date = $2
+            AND a.status NOT IN ('cancelled')
+            ORDER BY a.start_time ASC
+        `;
+        const result = await pool.query(query, [providerId, date]);
+        return result.rows;
+    }
+
     async findByProviderId(providerId: string): Promise<any[]> {
         const query = `
             SELECT 
@@ -101,16 +97,18 @@ export class AppointmentRepository implements IAppointmentRepository {
     async findConflicting(
         providerId: string,
         appointmentDate: string,
-        startTime: string
+        startTime: string,
+        endTime: string
     ): Promise<Appointment[]> {
         const query = `
             SELECT * FROM appointments
             WHERE provider_id = $1
             AND appointment_date = $2
             AND status NOT IN ('cancelled')
-            AND start_time = $3
+            AND start_time < $4::time
+            AND end_time > $3::time
         `;
-        const result = await pool.query(query, [providerId, appointmentDate, startTime]);
+        const result = await pool.query(query, [providerId, appointmentDate, startTime, endTime]);
         return result.rows;
     }
 
@@ -148,6 +146,17 @@ export class AppointmentRepository implements IAppointmentRepository {
             RETURNING *
         `;
         const result = await pool.query(query, [status, id]);
+        return result.rows[0] || null;
+    }
+
+    async updatePaymentStatus(id: string, paymentStatus: string, stripePaymentIntentId?: string): Promise<Appointment | null> {
+        const query = `
+            UPDATE appointments 
+            SET payment_status = $1, stripe_payment_intent_id = COALESCE($3, stripe_payment_intent_id), updated_at = NOW()
+            WHERE id = $2
+            RETURNING *
+        `;
+        const result = await pool.query(query, [paymentStatus, id, stripePaymentIntentId || null]);
         return result.rows[0] || null;
     }
 }

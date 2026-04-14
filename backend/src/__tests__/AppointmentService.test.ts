@@ -42,6 +42,7 @@ function createMockAppointmentRepo(overrides: Partial<IAppointmentRepository> = 
     findConflicting: jest.fn().mockResolvedValue([]),
     getProviderEarnings: jest.fn().mockResolvedValue({ daily: { total: 0, count: 0 }, weekly: { total: 0, count: 0 }, monthly: { total: 0, count: 0 } }),
     updateStatus: jest.fn().mockResolvedValue(mockAppointment),
+    updatePaymentStatus: jest.fn().mockResolvedValue(mockAppointment),
     ...overrides,
   };
 }

@@ -5,8 +5,6 @@ export const createAppointmentValidator: ValidationChain[] = [
         .notEmpty()
         .withMessage('Kuaför seçimi zorunludur'),
 
-    // Hem yeni çoklu hizmet alanını (service_ids) hem de
-    // eski tekli alanı (service_id) destekle
     body('service_ids')
         .custom((value, { req }) => {
             if (Array.isArray(value) && value.length > 0) {
@@ -30,7 +28,6 @@ export const createAppointmentValidator: ValidationChain[] = [
         .optional(),
 ];
 
-// Misafir (giriş yapmadan) randevu için doğrulama
 export const createPublicAppointmentValidator: ValidationChain[] = [
     body('provider_id')
         .notEmpty()
@@ -48,10 +45,13 @@ export const createPublicAppointmentValidator: ValidationChain[] = [
         .notEmpty()
         .withMessage('Saat zorunludur'),
 
-    body('total_price')
-        .optional()
-        .isNumeric()
-        .withMessage('Toplam fiyat sayısal olmalıdır'),
+    body('full_name')
+        .notEmpty()
+        .withMessage('Ad soyad zorunludur'),
+
+    body('phone')
+        .notEmpty()
+        .withMessage('Telefon numarası zorunludur'),
 
     body('notes')
         .optional(),
