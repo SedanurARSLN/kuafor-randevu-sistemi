@@ -1,4 +1,4 @@
-import { Router, raw } from 'express';
+import { Router } from 'express';
 import { PaymentController } from '../controllers/PaymentController';
 import { PaymentService } from '../services/PaymentService';
 import { AppointmentRepository } from '../repositories/AppointmentRepository';
@@ -12,6 +12,6 @@ const paymentController = new PaymentController(paymentService);
 
 router.post('/create-intent', authenticate, paymentController.createIntent);
 router.post('/confirm', authenticate, paymentController.confirmPayment);
-router.post('/webhook', raw({ type: 'application/json' }), paymentController.webhook);
+router.post('/webhook', paymentController.webhook);
 
 export default router;

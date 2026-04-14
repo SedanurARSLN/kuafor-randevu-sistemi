@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import paymentRoutes from './routes/paymentRoutes';
+import { notificationService } from './services/NotificationService';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use(generalLimiter);
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -91,6 +93,16 @@ const startServer = async () => {
     };
 
     tryMigrate();
+
+    // ─── Saatlik hatırlatma scheduler
+    // Her saat başında 1 saat sonraki randevulara hatırlatma gönderir
+    const ONE_HOUR_MS = 60 * 60 * 1000;
+    setInterval(() => {
+        notificationService.sendReminders().catch(() => {/* hata loglandi */});
+    }, ONE_HOUR_MS);
+
+    // Sunucu başlar başlamaz da bir kez kontrol et
+    notificationService.sendReminders().catch(() => {});
 };
 
 startServer();

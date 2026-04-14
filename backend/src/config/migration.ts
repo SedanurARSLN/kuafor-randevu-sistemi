@@ -28,28 +28,30 @@ const createTables = async () => {
         CREATE TABLE IF NOT EXISTS appointments (
             id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             customer_id     UUID REFERENCES users(id) ON DELETE CASCADE,
-            service_id      UUID REFERENCES services(id) ON DELETE CASCADE,
             provider_id     UUID REFERENCES users(id) ON DELETE CASCADE,
             appointment_date DATE NOT NULL,
             start_time      TIME NOT NULL,
-            end_time        TIME NOT NULL,
+            end_time        TIME,
             status          VARCHAR(20) DEFAULT 'pending'
                             CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
             notes           TEXT,
+            total_price     DECIMAL(10,2) NOT NULL DEFAULT 0,
             created_at      TIMESTAMP DEFAULT NOW(),
             updated_at      TIMESTAMP DEFAULT NOW()
         );
 
-        -- Şema güncellemeleri
-        ALTER TABLE appointments 
-            ADD COLUMN IF NOT EXISTS total_price DECIMAL(10,2) NOT NULL DEFAULT 0;
+        -- Eski service_id kolonu varsa kaldır (önceki migration'dan kalma)
+        ALTER TABLE appointments DROP COLUMN IF EXISTS service_id;
 
-        ALTER TABLE appointments 
-            ALTER COLUMN end_time DROP NOT NULL;
+        -- Junction table
+        CREATE TABLE IF NOT EXISTS appointment_services (
+            appointment_id  UUID REFERENCES appointments(id) ON DELETE CASCADE,
+            service_id      UUID REFERENCES services(id) ON DELETE CASCADE,
+            PRIMARY KEY (appointment_id, service_id)
+        );
 
-        -- service_id: UUID -> TEXT (çoklu hizmet desteği için virgülle ayrılmış ID'ler)
-        ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_service_id_fkey;
-        ALTER TABLE appointments ALTER COLUMN service_id TYPE TEXT USING service_id::text;
+        CREATE INDEX IF NOT EXISTS idx_appt_services_appointment ON appointment_services(appointment_id);
+        CREATE INDEX IF NOT EXISTS idx_appt_services_service     ON appointment_services(service_id);
 
         CREATE TABLE IF NOT EXISTS reviews (
             id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -74,6 +76,18 @@ const createTables = async () => {
 
         ALTER TABLE users
             ADD COLUMN IF NOT EXISTS reset_code_expires TIMESTAMP;
+
+        -- Refresh token
+        ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS refresh_token TEXT;
+
+        -- Push notification token (Expo)
+        ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS expo_push_token TEXT;
+
+        -- Hatırlatma bildirimi gönderildi mi?
+        ALTER TABLE appointments
+            ADD COLUMN IF NOT EXISTS reminder_sent TIMESTAMP;
 
         CREATE INDEX IF NOT EXISTS idx_appointments_customer ON appointments(customer_id);
         CREATE INDEX IF NOT EXISTS idx_appointments_provider ON appointments(provider_id);
