@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView, Share, StatusBar,
+  View, Text, TouchableOpacity, StyleSheet, ScrollView, Share, StatusBar, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,12 +29,19 @@ export default function HomeScreen({ navigation }: any) {
     monthly: { total: 0, count: 0 },
   });
   const [activePeriod, setActivePeriod] = useState<EarningsPeriod>('daily');
+  const statsErrorShown = useRef(false);
+  const earningsErrorShown = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
       fetchStats();
       if (isProvider) fetchEarnings();
-    }, [])
+      return () => {
+        // Reset flags so a fresh visit can show error alerts again
+        statsErrorShown.current = false;
+        earningsErrorShown.current = false;
+      };
+    }, [isProvider])
   );
 
   const fetchStats = async () => {
@@ -47,14 +54,28 @@ export default function HomeScreen({ navigation }: any) {
         confirmed: appointments.filter((a: any) => a.status === 'confirmed').length,
         completed: appointments.filter((a: any) => a.status === 'completed').length,
       });
-    } catch { /* silent */ }
+    } catch (error: any) {
+      if (__DEV__) console.warn('[HomeScreen] fetchStats error:', error?.message ?? error);
+      if (!statsErrorShown.current) {
+        statsErrorShown.current = true;
+        const msg = error?.response?.data?.message || 'İstatistikler yüklenemedi';
+        Alert.alert('Uyarı', msg);
+      }
+    }
   };
 
   const fetchEarnings = async () => {
     try {
       const data = await providerAppointmentService.getEarnings();
       setEarnings(data);
-    } catch { /* silent */ }
+    } catch (error: any) {
+      if (__DEV__) console.warn('[HomeScreen] fetchEarnings error:', error?.message ?? error);
+      if (!earningsErrorShown.current) {
+        earningsErrorShown.current = true;
+        const msg = error?.response?.data?.message || 'Kazanç bilgileri yüklenemedi';
+        Alert.alert('Uyarı', msg);
+      }
+    }
   };
 
   const handleShareLink = async () => {
