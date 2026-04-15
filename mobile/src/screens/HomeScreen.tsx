@@ -58,7 +58,7 @@ export default function HomeScreen({ navigation }: any) {
       if (__DEV__) console.warn('[HomeScreen] fetchStats error:', error?.message ?? error);
       if (!statsErrorShown.current) {
         statsErrorShown.current = true;
-        const msg = error?.response?.data?.message || error?.message || 'İstatistikler yüklenemedi';
+        const msg = error?.response?.data?.message || 'İstatistikler yüklenemedi';
         Alert.alert('Uyarı', msg);
       }
     }
@@ -72,7 +72,7 @@ export default function HomeScreen({ navigation }: any) {
       if (__DEV__) console.warn('[HomeScreen] fetchEarnings error:', error?.message ?? error);
       if (!earningsErrorShown.current) {
         earningsErrorShown.current = true;
-        const msg = error?.response?.data?.message || error?.message || 'Kazanç bilgileri yüklenemedi';
+        const msg = error?.response?.data?.message || 'Kazanç bilgileri yüklenemedi';
         Alert.alert('Uyarı', msg);
       }
     }
