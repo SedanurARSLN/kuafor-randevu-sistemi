@@ -101,7 +101,11 @@ export default function AppointmentsScreen({ navigation }: any) {
         <View style={styles.cardInner}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <Text style={styles.serviceName}>{item.service_name}</Text>
+              <Text style={styles.serviceName}>
+                {Array.isArray(item.service_names)
+                  ? item.service_names.filter(Boolean).join(', ')
+                  : item.service_name || 'Hizmet'}
+              </Text>
               <Text style={styles.personName}>
                 {user?.role === 'provider' ? item.customer_name : item.provider_name}
               </Text>
@@ -128,30 +132,48 @@ export default function AppointmentsScreen({ navigation }: any) {
           ) : null}
 
           <View style={styles.cardFooter}>
-            <Text style={styles.price}>₺{item.total_price}</Text>
+            <View>
+              <Text style={styles.price}>₺{item.total_price}</Text>
+              <View style={[styles.paymentBadge, {
+                backgroundColor: item.payment_status === 'paid' ? COLORS.success + '18'
+                  : item.payment_status === 'refunded' ? COLORS.danger + '18'
+                  : COLORS.pending + '18'
+              }]}>
+                <Text style={[styles.paymentBadgeText, {
+                  color: item.payment_status === 'paid' ? COLORS.success
+                    : item.payment_status === 'refunded' ? COLORS.danger
+                    : COLORS.pending
+                }]}>
+                  {item.payment_status === 'paid' ? 'Ödendi' : item.payment_status === 'refunded' ? 'İade' : 'Ödenmedi'}
+                </Text>
+              </View>
+            </View>
             <View style={styles.actions}>
               {user?.role === 'provider' && item.status === 'pending' && (
                 <TouchableOpacity
-                  style={[styles.iconBtn, { backgroundColor: COLORS.success + '15' }]}
+                  style={[styles.actionBtn, { backgroundColor: COLORS.success + '15' }]}
                   onPress={() => handleAction(item.id, 'confirm')}
                 >
-                  <Ionicons name="checkmark-circle" size={22} color={COLORS.success} />
+                  <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                  <Text style={[styles.actionBtnText, { color: COLORS.success }]}>Onayla</Text>
                 </TouchableOpacity>
               )}
               {user?.role === 'provider' && item.status === 'confirmed' && (
                 <TouchableOpacity
-                  style={[styles.iconBtn, { backgroundColor: COLORS.completed + '15' }]}
+                  style={[styles.actionBtn, { backgroundColor: COLORS.completed + '15' }]}
                   onPress={() => handleAction(item.id, 'complete')}
                 >
-                  <Ionicons name="checkmark-done-circle" size={22} color={COLORS.completed} />
+                  <Ionicons name="checkmark-done-circle" size={16} color={COLORS.completed} />
+                  <Text style={[styles.actionBtnText, { color: COLORS.completed }]}>Tamamla</Text>
                 </TouchableOpacity>
               )}
               {item.status !== 'cancelled' && item.status !== 'completed' && (
                 <TouchableOpacity
-                  style={[styles.iconBtn, { backgroundColor: COLORS.danger + '15' }]}
+                  style={[styles.actionBtn, { backgroundColor: COLORS.danger + '15' }]}
                   onPress={() => handleAction(item.id, 'cancel')}
                 >
-                  <Ionicons name="close-circle" size={22} color={COLORS.danger} />
+                  <Ionicons name="close-circle" size={16} color={COLORS.danger} />
+                  <Text style={[styles.actionBtnText, { color: COLORS.danger }]}>İptal</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -249,8 +271,14 @@ const styles = StyleSheet.create({
 
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
   price: { fontFamily: FONTS.bold, fontSize: SIZES.xl, color: COLORS.primary },
-  actions: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  actions: { flexDirection: 'row', gap: 6 },
+  actionBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16,
+  },
+  actionBtnText: { fontFamily: FONTS.semiBold, fontSize: 11 },
+  paymentBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginTop: 4, alignSelf: 'flex-start' },
+  paymentBadgeText: { fontFamily: FONTS.semiBold, fontSize: 10 },
 
   emptyState: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
   emptyIconBox: {

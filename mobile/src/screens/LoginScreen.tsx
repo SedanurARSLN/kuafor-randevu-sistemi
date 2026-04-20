@@ -13,6 +13,7 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,9 +75,15 @@ export default function LoginScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Eksik Bilgi', 'E-posta ve şifre zorunludur');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi girin');
       return;
     }
     setLoading(true);
@@ -195,6 +202,14 @@ export default function LoginScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity
+              style={styles.forgotBtn}
+              onPress={() => navigation.navigate('ForgotPassword')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.forgotText}>Şifremi Unuttum</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.registerBtn}
               onPress={() => navigation.navigate('Register')}
               activeOpacity={0.85}
@@ -205,7 +220,12 @@ export default function LoginScreen({ navigation }: any) {
 
             <Text style={styles.footerNote}>
               Kayıt olarak{' '}
-              <Text style={styles.footerLink}>Gizlilik Politikasını</Text>
+              <Text
+                style={styles.footerLink}
+                onPress={() => Linking.openURL('https://kuafor-randevu-sistemi-3shp.onrender.com/privacy-policy')}
+              >
+                Gizlilik Politikasını
+              </Text>
               {' '}kabul etmiş olursunuz.
             </Text>
           </View>
@@ -355,6 +375,9 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     marginHorizontal: 12,
   },
+
+  forgotBtn: { alignSelf: 'flex-end', marginTop: 8, marginBottom: 8 },
+  forgotText: { fontFamily: FONTS.semiBold, fontSize: SIZES.sm, color: COLORS.primary },
 
   registerBtn: {
     flexDirection: 'row',

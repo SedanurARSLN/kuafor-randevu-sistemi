@@ -16,7 +16,7 @@ export class PaymentService {
 
     async createPaymentIntent(appointmentId: string, userId: string): Promise<{ clientSecret: string; paymentIntentId: string }> {
         if (!this.stripe) {
-            throw new AppError('Ödeme sistemi yapılandırılmamış', 503);
+            throw new AppError('Ödeme sistemi yapılandırılmamış. Randevunuz oluşturuldu, ödeme daha sonra yapılabilir.', 503);
         }
 
         const appointment = await this.appointmentRepository.findById(appointmentId);
@@ -35,6 +35,7 @@ export class PaymentService {
         const paymentIntent = await this.stripe.paymentIntents.create({
             amount,
             currency: 'try',
+            automatic_payment_methods: { enabled: true },
             metadata: {
                 appointment_id: appointmentId,
                 customer_id: userId,

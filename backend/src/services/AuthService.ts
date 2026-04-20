@@ -36,12 +36,11 @@ export class AuthService {
             'customer'
         );
 
-        const token = this.generateToken(user.id, user.role);
+        const token = this.generateAccessToken(user.id, user.role);
+        const refreshToken = this.generateRefreshToken(user.id, user.role);
+        await this.userRepository.update(user.id, { refresh_token: refreshToken } as any);
 
-        return {
-            user: this.toUserResponse(user),
-            token,
-        };
+        return { user: this.toUserResponse(user), token, refreshToken };
     }
 
     // ─── KUAFÖR (PROVIDER) KAYIT
@@ -61,12 +60,11 @@ export class AuthService {
             'provider'
         );
 
-        const token = this.generateToken(user.id, user.role);
+        const token = this.generateAccessToken(user.id, user.role);
+        const refreshToken = this.generateRefreshToken(user.id, user.role);
+        await this.userRepository.update(user.id, { refresh_token: refreshToken } as any);
 
-        return {
-            user: this.toUserResponse(user),
-            token,
-        };
+        return { user: this.toUserResponse(user), token, refreshToken };
     }
 
     // ─── GİRİŞ
@@ -81,12 +79,29 @@ export class AuthService {
             throw new AppError('Email veya şifre hatalı', 401);
         }
 
-        const token = this.generateToken(user.id, user.role);
+        const token = this.generateAccessToken(user.id, user.role);
+        const refreshToken = this.generateRefreshToken(user.id, user.role);
+        await this.userRepository.update(user.id, { refresh_token: refreshToken } as any);
 
-        return {
-            user: this.toUserResponse(user),
-            token,
-        };
+        return { user: this.toUserResponse(user), token, refreshToken };
+    }
+
+    // ─── REFRESH TOKEN
+    async refreshAccessToken(refreshToken: string): Promise<{ token: string }> {
+        let payload: { userId: string; role: string };
+        try {
+            payload = jwt.verify(refreshToken, config.jwtSecret + '_refresh') as any;
+        } catch {
+            throw new AppError('Geçersiz veya süresi dolmuş refresh token', 401);
+        }
+
+        const user = await this.userRepository.findByRefreshToken(refreshToken);
+        if (!user) {
+            throw new AppError('Refresh token bulunamadı', 401);
+        }
+
+        const token = this.generateAccessToken(payload.userId, payload.role);
+        return { token };
     }
 
     // ─── PROFİL GÖRÜNTÜLE
@@ -176,6 +191,11 @@ export class AuthService {
         } as any);
     }
 
+    // ─── PUSH TOKEN KAYDET
+    async savePushToken(userId: string, token: string): Promise<void> {
+        await this.userRepository.savePushToken(userId, token);
+    }
+
     // ─── PROFİL GÜNCELLE
     async updateProfile(userId: string, data: { full_name?: string; phone?: string; old_password?: string; new_password?: string }): Promise<UserResponse> {
         const user = await this.userRepository.findById(userId);
@@ -209,13 +229,14 @@ export class AuthService {
         return this.toUserResponse(updated!);
     }
 
-    // ─── YARDIMCI: JWT Token oluştur
-    private generateToken(userId: string, role: string): string {
-        const payload = { userId, role };
-        const secret = config.jwtSecret;
-        const expiresIn = config.jwtExpiresIn as string;
+    // ─── YARDIMCI: Access Token (kısa süreli)
+    private generateAccessToken(userId: string, role: string): string {
+        return jwt.sign({ userId, role }, config.jwtSecret, { expiresIn: '15m' });
+    }
 
-        return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
+    // ─── YARDIMCI: Refresh Token (uzun süreli, ayrı secret)
+    private generateRefreshToken(userId: string, role: string): string {
+        return jwt.sign({ userId, role }, config.jwtSecret + '_refresh', { expiresIn: '30d' });
     }
 
     // ─── YARDIMCI: User → UserResponse (şifre hariç)

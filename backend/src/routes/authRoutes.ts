@@ -20,6 +20,8 @@ router.post('/login', authLimiter, loginValidator, validateRequest, authControll
 router.get('/profile', authenticate, authController.getProfile);
 router.patch('/profile', authenticate, authController.updateProfile);
 router.delete('/account', authenticate, authController.deleteAccount);
+router.post('/refresh-token', authController.refreshToken);
+router.post('/push-token', authenticate, authController.savePushToken);
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/reset-password', authLimiter, authController.resetPassword);
 router.get('/providers', authController.getAllProviders);

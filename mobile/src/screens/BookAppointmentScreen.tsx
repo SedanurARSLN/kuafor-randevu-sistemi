@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert,
   ScrollView, ActivityIndicator, TextInput, StatusBar, Platform,
@@ -9,6 +13,7 @@ import api from '../services/api';
 import { appointmentService } from '../services/appointmentService';
 import { providerAppointmentService } from '../services/providerAppointmentService';
 import { COLORS, SIZES, FONTS, GRADIENTS, SHADOWS } from '../constants/theme';
+import { isStripePublishableKeyConfigured } from '../config/config';
 
 const TIME_SLOTS = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -27,11 +32,18 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const [submitting, setSubmitting] = useState(false);
   const [busySlots, setBusySlots] = useState<string[]>([]);
 
+  const toLocalDateString = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   const dates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() + i + 1);
     return {
-      full: date.toISOString().split('T')[0],
+      full: toLocalDateString(date),   // UTC değil, lokal tarih
       day: date.toLocaleDateString('tr-TR', { weekday: 'short' }),
       num: date.getDate(),
       month: date.toLocaleDateString('tr-TR', { month: 'short' }),
@@ -44,6 +56,11 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
     if (selectedDate && provider?.id) fetchBusySlots();
     else setBusySlots([]);
   }, [selectedDate, provider?.id]);
+
+  // Ekrana her dönüşte (iptal sonrası vb.) dolu saatleri yenile
+  useFocusEffect(useCallback(() => {
+    if (selectedDate && provider?.id) fetchBusySlots();
+  }, [selectedDate, provider?.id]));
 
   const fetchServices = async () => {
     try {
@@ -59,10 +76,26 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
   const fetchBusySlots = async () => {
     try {
       const appointments = await providerAppointmentService.getAppointmentsByDate(provider.id, selectedDate);
-      const slots = appointments.map((a: any) => a.start_time ? a.start_time.slice(0, 5) : '');
-      setBusySlots(slots);
+      const occupied = new Set<string>();
+      for (const a of appointments) {
+        const st = a.start_time ? a.start_time.slice(0, 5) : '';
+        const et = a.end_time   ? a.end_time.slice(0, 5)   : '';
+        if (!st) continue;
+        // start_time ile end_time arasındaki tüm 30 dk'lık slotları dolu işaretle
+        const [sh, sm] = st.split(':').map(Number);
+        const [eh, em] = et ? et.split(':').map(Number) : [sh, sm + 30];
+        const startMin = sh * 60 + sm;
+        const endMin   = eh * 60 + em;
+        for (let m = startMin; m < endMin; m += 30) {
+          const hh = String(Math.floor(m / 60)).padStart(2, '0');
+          const mm = String(m % 60).padStart(2, '0');
+          occupied.add(`${hh}:${mm}`);
+        }
+      }
+      setBusySlots(Array.from(occupied));
     } catch {
       setBusySlots([]);
+      Alert.alert('Uyarı', 'Dolu saatler yüklenemedi. Tüm saatler müsait görünebilir.');
     }
   };
 
@@ -81,14 +114,104 @@ export default function BookAppointmentScreen({ route, navigation }: any) {
     }
     setSubmitting(true);
     try {
-      await appointmentService.create({
+      const result = await appointmentService.create({
         provider_id: provider.id,
         service_ids: selectedServices.map((s) => s.id),
         appointment_date: selectedDate,
         start_time: selectedTime,
-        total_price: getTotalPrice(),
         notes: notes || undefined,
       });
+
+      const appointmentId = result.data?.id;
+      if (appointmentId) {
+        // Stripe kullanılamıyorsa hemen çık
+        if (isExpoGo || !isStripePublishableKeyConfigured()) {
+          Alert.alert(‘Randevu oluşturuldu’, ‘Ödeme dev build gerektirir. Randevunuz kaydedildi.’, [
+            { text: ‘Tamam’, onPress: () => navigation.goBack() },
+          ]);
+          return;
+        }
+
+        try {
+          // Stripe modülünü yükle
+          const stripeModule = await import(‘@stripe/stripe-react-native’);
+          const { initPaymentSheet, presentPaymentSheet } = stripeModule;
+
+          // Backend’den clientSecret al
+          const { paymentService } = await import(‘../services/appointmentService’);
+          const paymentResult = await paymentService.createIntent(appointmentId);
+          const clientSecret = paymentResult.data?.clientSecret as string | undefined;
+
+          if (!clientSecret) {
+            Alert.alert(‘Ödeme başlatılamadı’, ‘Sunucu clientSecret dönmedi. Randevunuz oluşturuldu.’, [
+              { text: ‘Tamam’, onPress: () => navigation.goBack() },
+            ]);
+            return;
+          }
+
+          // Payment Sheet’i başlat
+          const { error: initError } = await initPaymentSheet({
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: ‘Kuaför Randevu’,
+            style: ‘automatic’,
+          });
+          if (initError) {
+            Alert.alert(‘Ödeme formu açılamadı’, `${initError.message}\n\nRandevunuz oluşturuldu.`, [
+              { text: ‘Tamam’, onPress: () => navigation.goBack() },
+            ]);
+            return;
+          }
+
+          // Payment Sheet’i göster
+          const { error: payError } = await presentPaymentSheet();
+          if (payError) {
+            if (payError.code === ‘Canceled’) {
+              Alert.alert(‘Ödeme iptal edildi’, ‘Randevunuz oluşturuldu, daha sonra ödeme yapabilirsiniz.’, [
+                { text: ‘Tamam’, onPress: () => navigation.goBack() },
+              ]);
+              return;
+            }
+            Alert.alert(‘Ödeme başarısız’, `${payError.message}\n\nRandevunuz oluşturuldu.`, [
+              { text: ‘Tamam’, onPress: () => navigation.goBack() },
+            ]);
+            return;
+          }
+
+          await paymentService.confirmPayment(appointmentId);
+          Alert.alert(‘Başarılı!’, ‘Ödemeniz alındı ve randevunuz oluşturuldu.’, [
+            { text: ‘Tamam’, onPress: () => navigation.goBack() },
+          ]);
+          return;
+        } catch (e: any) {
+          const status = e?.response?.status;
+          const apiMsg =
+            typeof e?.response?.data === 'object' && e?.response?.data?.message
+              ? String(e.response.data.message)
+              : '';
+          let msg = apiMsg || e?.message || 'Ödeme başlatılamadı.';
+          if (status === 404) {
+            msg =
+              'Sunucuda ödeme adresi bulunamadı (404). Render’da backend’in güncel kodu deploy edilmiş olmalı '
+              + '(içinde /api/payments/create-intent rotası). GitHub’a push edip Manual Deploy yap veya '
+              + 'Root Directory / Build Command ayarlarını kontrol et.';
+          }
+          if (status === 503) {
+            Alert.alert(
+              'Bilgi',
+              `${msg}`,
+              [{ text: 'Tamam', onPress: () => navigation.goBack() }],
+            );
+            return;
+          }
+          Alert.alert(
+            'Ödeme hatası',
+            `${msg}\n\nRandevunuz oluşturuldu.`,
+            [{ text: 'Tamam', onPress: () => navigation.goBack() }],
+          );
+          return;
+        }
+      }
+
       Alert.alert('Başarılı!', 'Randevunuz oluşturuldu', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);

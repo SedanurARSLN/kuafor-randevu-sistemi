@@ -1,0 +1,3 @@
+{"sessionId":"11eb83","runId":"run1","hypothesisId":"H1","location":"build-config","message":"Slug mismatch check","data":{"projectId":"73ade11c-0ead-4866-b6ab-288922a2d70a","slug":"kuafor-randevu"},"timestamp":1776115518367}
+{"sessionId":"11eb83","runId":"run1","hypothesisId":"H3","location":"build-config","message":"Package identifiers present","data":{"androidPackage":"com.kuaforrandevu.app","iosBundleIdentifier":"com.kuaforrandevu.app"},"timestamp":1776115518399}
+{"sessionId":"11eb83","runId":"run1","hypothesisId":"H2","location":"build-config","message":"Missing cli.appVersionSource","data":{"hasAppVersionSource":false},"timestamp":1776115518398}

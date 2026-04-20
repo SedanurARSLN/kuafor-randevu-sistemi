@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, StatusBar, Platform,
+  TextInput, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,7 +25,32 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
 }
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(user?.full_name || '');
+  const [editPhone, setEditPhone] = useState(user?.phone || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      Alert.alert('Hata', 'Ad soyad boş olamaz');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.patch('/auth/profile', {
+        full_name: editName.trim(),
+        phone: editPhone.replace(/\D/g, '') || undefined,
+      });
+      if (refreshUser) await refreshUser();
+      setEditing(false);
+      Alert.alert('Başarılı', 'Profil güncellendi');
+    } catch (error: any) {
+      Alert.alert('Hata', error.response?.data?.message || 'Profil güncellenemedi');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert('Çıkış', 'Çıkış yapmak istiyor musunuz?', [
@@ -81,16 +107,65 @@ export default function ProfileScreen() {
         <View style={styles.body}>
           {/* Info Card */}
           <View style={[styles.card, SHADOWS.sm]}>
-            <Text style={styles.cardTitle}>Hesap Bilgileri</Text>
-            <InfoRow icon="mail-outline" label="Email" value={user?.email ?? ''} />
-            <View style={styles.divider} />
-            <InfoRow icon="call-outline" label="Telefon" value={user?.phone || 'Belirtilmemiş'} />
-            <View style={styles.divider} />
-            <InfoRow
-              icon="person-circle-outline"
-              label="Hesap Türü"
-              value={user?.role === 'provider' ? 'Kuaför' : 'Müşteri'}
-            />
+            <View style={styles.cardTitleRow}>
+              <Text style={styles.cardTitle}>Hesap Bilgileri</Text>
+              {!editing ? (
+                <TouchableOpacity onPress={() => { setEditName(user?.full_name || ''); setEditPhone(user?.phone || ''); setEditing(true); }}>
+                  <Text style={styles.editLink}>Düzenle</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={() => setEditing(false)}>
+                  <Text style={[styles.editLink, { color: COLORS.danger }]}>Vazgeç</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {editing ? (
+              <>
+                <Text style={styles.editLabel}>Ad Soyad</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Adınız Soyadınız"
+                  placeholderTextColor={COLORS.textMuted}
+                />
+                <Text style={styles.editLabel}>Telefon</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={editPhone}
+                  onChangeText={setEditPhone}
+                  placeholder="05XX XXX XX XX"
+                  keyboardType="phone-pad"
+                  placeholderTextColor={COLORS.textMuted}
+                />
+                <TouchableOpacity
+                  style={[styles.saveBtn, saving && { opacity: 0.7 }]}
+                  onPress={handleSaveProfile}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator color={COLORS.white} size="small" />
+                  ) : (
+                    <Text style={styles.saveBtnText}>Kaydet</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <InfoRow icon="person-outline" label="Ad Soyad" value={user?.full_name ?? ''} />
+                <View style={styles.divider} />
+                <InfoRow icon="mail-outline" label="Email" value={user?.email ?? ''} />
+                <View style={styles.divider} />
+                <InfoRow icon="call-outline" label="Telefon" value={user?.phone || 'Belirtilmemiş'} />
+                <View style={styles.divider} />
+                <InfoRow
+                  icon="person-circle-outline"
+                  label="Hesap Türü"
+                  value={user?.role === 'provider' ? 'Kuaför' : 'Müşteri'}
+                />
+              </>
+            )}
           </View>
 
           {/* About Card */}
@@ -167,7 +242,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg,
     padding: 20, marginBottom: 14,
   },
-  cardTitle: { fontFamily: FONTS.semiBold, fontSize: SIZES.md, color: COLORS.textSecondary, marginBottom: 16, letterSpacing: 0.3, textTransform: 'uppercase' },
+  cardTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  cardTitle: { fontFamily: FONTS.semiBold, fontSize: SIZES.md, color: COLORS.textSecondary, letterSpacing: 0.3, textTransform: 'uppercase' },
+  editLink: { fontFamily: FONTS.semiBold, fontSize: SIZES.sm, color: COLORS.primary },
+  editLabel: { fontFamily: FONTS.semiBold, fontSize: SIZES.sm, color: COLORS.textSecondary, marginBottom: 6, marginTop: 12, textTransform: 'uppercase' },
+  editInput: {
+    borderWidth: 1.5, borderColor: COLORS.border, borderRadius: SIZES.radius,
+    backgroundColor: COLORS.surfaceSecondary, paddingHorizontal: 14, paddingVertical: 13,
+    fontSize: SIZES.md, fontFamily: FONTS.regular, color: COLORS.textPrimary,
+  },
+  saveBtn: {
+    backgroundColor: COLORS.primary, borderRadius: SIZES.radius,
+    paddingVertical: 14, alignItems: 'center', marginTop: 20,
+  },
+  saveBtnText: { fontFamily: FONTS.bold, color: COLORS.white, fontSize: SIZES.md },
   infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   infoIconBox: {
     width: 40, height: 40, borderRadius: 12,

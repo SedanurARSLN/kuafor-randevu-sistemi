@@ -40,6 +40,26 @@
     },
     "updates": {
       "url": "https://u.expo.dev/73ade11c-0ead-4866-b6ab-288922a2d70a"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2563EB",
+          "sounds": [],
+          "androidMode": "default",
+          "androidCollapsedTitle": "Kuaför Randevu"
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.kuaforrandevu.app",
+          "enableGooglePay": true
+        }
+      ]
+    ]
   }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Share, StatusBar,
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +30,7 @@ export default function HomeScreen({ navigation }: any) {
     monthly: { total: 0, count: 0 },
   });
   const [activePeriod, setActivePeriod] = useState<EarningsPeriod>('daily');
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,6 +40,7 @@ export default function HomeScreen({ navigation }: any) {
   );
 
   const fetchStats = async () => {
+    setStatsLoading(true);
     try {
       const response = await appointmentService.getMyAppointments();
       const appointments = response.data;
@@ -47,14 +50,20 @@ export default function HomeScreen({ navigation }: any) {
         confirmed: appointments.filter((a: any) => a.status === 'confirmed').length,
         completed: appointments.filter((a: any) => a.status === 'completed').length,
       });
-    } catch { /* silent */ }
+    } catch {
+      Alert.alert('Uyarı', 'İstatistikler yüklenemedi');
+    } finally {
+      setStatsLoading(false);
+    }
   };
 
   const fetchEarnings = async () => {
     try {
       const data = await providerAppointmentService.getEarnings();
       setEarnings(data);
-    } catch { /* silent */ }
+    } catch {
+      Alert.alert('Uyarı', 'Kazanç bilgileri yüklenemedi');
+    }
   };
 
   const handleShareLink = async () => {
@@ -104,7 +113,11 @@ export default function HomeScreen({ navigation }: any) {
         </LinearGradient>
 
         <View style={styles.body}>
-          {isProvider ? (
+          {statsLoading ? (
+            <View style={{ alignItems: 'center', paddingVertical: 30 }}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+          ) : isProvider ? (
             <>
               {/* Earnings Card */}
               <View style={[styles.earningsCard, SHADOWS.md]}>
@@ -141,7 +154,7 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
               </View>
             </>
-          ) : (
+          ) : statsLoading ? null : (
             /* Customer stats */
             <View style={styles.statsRow}>
               {statCards.map((s) => (
@@ -195,6 +208,13 @@ export default function HomeScreen({ navigation }: any) {
                 desc="Hizmet ekle ve düzenle"
                 onPress={() => navigation.navigate('MyServices')}
                 accent={COLORS.secondary}
+              />
+              <QuickCard
+                icon="wallet"
+                title="Kazançlarım"
+                desc="Gelirlerinizi ve tamamlanan randevuları görün"
+                onPress={() => navigation.navigate('ProviderEarnings')}
+                accent={COLORS.success}
               />
             </>
           )}

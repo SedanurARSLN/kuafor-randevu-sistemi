@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  TextInput, Animated, StatusBar,
+  TextInput, Animated, StatusBar, Alert, RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,6 +48,7 @@ function SkeletonCard() {
 export default function ProvidersScreen({ navigation }: any) {
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
 
   useFocusEffect(useCallback(() => { fetchProviders(); }, []));
@@ -56,8 +57,11 @@ export default function ProvidersScreen({ navigation }: any) {
     try {
       const response = await api.get('/auth/providers');
       setProviders(response.data.data);
-    } catch { /* silent */ } finally {
+    } catch {
+      Alert.alert('Hata', 'Kuaförler yüklenemedi. Lütfen tekrar deneyin.');
+    } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -101,6 +105,13 @@ export default function ProvidersScreen({ navigation }: any) {
           data={filtered}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchProviders(); }}
+              colors={[COLORS.primary]}
+            />
+          }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[styles.card, SHADOWS.sm]}
@@ -122,13 +133,9 @@ export default function ProvidersScreen({ navigation }: any) {
                   <Text style={styles.phone}>{item.phone}</Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={styles.bookBtn}
-                onPress={() => navigation.navigate('BookAppointment', { provider: item })}
-                activeOpacity={0.85}
-              >
+              <View style={styles.bookBtn}>
                 <Text style={styles.bookBtnText}>Randevu Alın</Text>
-              </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           )}
           ListEmptyComponent={

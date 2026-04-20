@@ -77,4 +77,5 @@ export const SHADOWS = {
   },
 };
 
-export const API_URL = "https://kuafor-randevu-sistemi-3shp.onrender.com/api";
+// API_URL moved to src/config/config.ts
+export { API_URL } from '../config/config';

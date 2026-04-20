@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, Modal, TextInput, RefreshControl,
-  KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard, StatusBar,
+  KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard, StatusBar, Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,9 +52,28 @@ export default function MyServicesScreen() {
     setModalVisible(true);
   };
 
+  const handleToggleActive = async (service: any) => {
+    try {
+      await api.put(`/services/${service.id}`, { is_active: !service.is_active });
+      fetchServices();
+    } catch {
+      Alert.alert('Hata', 'Durum güncellenemedi');
+    }
+  };
+
   const handleSave = async () => {
     if (!form.name || !form.duration_minutes || !form.price) {
       Alert.alert('Hata', 'Ad, süre ve fiyat zorunludur');
+      return;
+    }
+    const duration = parseInt(form.duration_minutes);
+    const price = parseFloat(form.price);
+    if (isNaN(duration) || duration < 5 || duration > 480) {
+      Alert.alert('Hata', 'Süre 5 ile 480 dakika arasında olmalıdır');
+      return;
+    }
+    if (isNaN(price) || price < 0 || price > 10000) {
+      Alert.alert('Hata', 'Fiyat 0 ile 10.000 TL arasında olmalıdır');
       return;
     }
     setSubmitting(true);
@@ -62,8 +81,8 @@ export default function MyServicesScreen() {
       const data = {
         name: form.name,
         description: form.description,
-        duration_minutes: parseInt(form.duration_minutes),
-        price: parseFloat(form.price),
+        duration_minutes: duration,
+        price: price,
       };
       if (editingService) {
         await api.put(`/services/${editingService.id}`, data);
@@ -131,12 +150,12 @@ export default function MyServicesScreen() {
                       <Text style={styles.serviceName}>{item.name}</Text>
                       {item.description ? <Text style={styles.desc}>{item.description}</Text> : null}
                     </View>
-                    <View style={[styles.badge, { backgroundColor: item.is_active ? COLORS.success + '15' : COLORS.danger + '15' }]}>
-                      <View style={[styles.badgeDot, { backgroundColor: item.is_active ? COLORS.success : COLORS.danger }]} />
-                      <Text style={[styles.badgeText, { color: item.is_active ? COLORS.success : COLORS.danger }]}>
-                        {item.is_active ? 'Aktif' : 'Pasif'}
-                      </Text>
-                    </View>
+                    <Switch
+                      value={item.is_active}
+                      onValueChange={() => handleToggleActive(item)}
+                      trackColor={{ false: COLORS.border, true: COLORS.success + '50' }}
+                      thumbColor={item.is_active ? COLORS.success : COLORS.textMuted}
+                    />
                   </View>
 
                   <View style={styles.detailsRow}>

@@ -6,7 +6,7 @@ const envApiUrl =
 export const API_URL =
   envApiUrl.length > 0
     ? envApiUrl
-    : 'http://172.20.10.2:3000/api';
+    : 'https://kuafor-randevu-sistemi-3shp.onrender.com/api';
 
 const envStripe =
   typeof process !== 'undefined' && process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY

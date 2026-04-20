@@ -1,0 +1,29 @@
+diff --git a/node_modules/@stripe/stripe-react-native/src/specs/NativeOnrampSdkModule.ts b/node_modules/@stripe/stripe-react-native/src/specs/NativeOnrampSdkModule.ts
+index 1234567..abcdefg 100644
+--- a/node_modules/@stripe/stripe-react-native/src/specs/NativeOnrampSdkModule.ts
++++ b/node_modules/@stripe/stripe-react-native/src/specs/NativeOnrampSdkModule.ts
+@@ -43,4 +43,23 @@ export interface Spec extends TurboModule {
+   removeListeners: (count: number) => void;
+ }
+ 
+-export default TurboModuleRegistry.getEnforcing<Spec>('OnrampSdk');
++const OnrampSdkModule = TurboModuleRegistry.get<Spec>('OnrampSdk');
++
++// Provide a no-op proxy so that callers don't crash when the native module
++// is unavailable (e.g. the Onramp SDK hasn't been compiled into the binary).
++const NoopProxy = new Proxy({} as Spec, {
++  get(_target, prop) {
++    if (prop === 'addListener' || prop === 'removeListeners') {
++      return () => {};
++    }
++    return (..._args: any[]) =>
++      Promise.reject(
++        new Error(
++          'OnrampSdk native module is not available. ' +
++            'If you need onramp functionality, rebuild with the Onramp SDK.'
++        )
++      );
++  },
++});
++
++export default OnrampSdkModule ?? NoopProxy;

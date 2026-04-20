@@ -41,9 +41,15 @@ export default function RegisterScreen({ navigation }: any) {
     setPhone(formatted);
   };
 
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
   const handleRegister = async () => {
     if (!fullName || !email || !phone || !password) {
       Alert.alert('Hata', 'Tüm alanlar zorunludur');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi girin');
       return;
     }
     if (password.length < 6) {
@@ -128,7 +134,7 @@ export default function RegisterScreen({ navigation }: any) {
                   <Ionicons name="cut" size={28} color={role === 'provider' ? COLORS.white : COLORS.textMuted} />
                 </View>
                 <Text style={[styles.roleCardTitle, role === 'provider' && styles.roleCardTitleActive]}>Kuaför</Text>
-                <Text style={[styles.roleCardSub, role === 'provider' && styles.roleCardSubActive]}>Randevu alın</Text>
+                <Text style={[styles.roleCardSub, role === 'provider' && styles.roleCardSubActive]}>Randevu yönetin</Text>
                 {role === 'provider' && (
                   <View style={styles.roleCheck}>
                     <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />

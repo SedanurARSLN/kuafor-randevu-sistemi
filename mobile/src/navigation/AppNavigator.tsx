@@ -15,6 +15,8 @@ import ProvidersScreen from '../screens/ProvidersScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
 import MyServicesScreen from '../screens/MyServicesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ProviderEarningsScreen from '../screens/ProviderEarningsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,6 +43,7 @@ function AuthStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </Stack.Navigator>
   );
 }
@@ -164,7 +167,10 @@ export default function AppNavigator() {
         {!user ? (
           <Stack.Screen name="Auth" component={AuthStack} />
         ) : user.role === 'provider' ? (
-          <Stack.Screen name="ProviderApp" component={ProviderTabs} />
+          <>
+            <Stack.Screen name="ProviderApp" component={ProviderTabs} />
+            <Stack.Screen name="ProviderEarnings" component={ProviderEarningsScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="CustomerApp" component={CustomerTabs} />

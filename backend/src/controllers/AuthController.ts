@@ -134,6 +134,25 @@ export class AuthController {
         }
     };
 
+    // POST /api/auth/refresh-token
+    refreshToken = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const { refreshToken } = req.body;
+            if (!refreshToken) {
+                res.status(400).json({ success: false, message: 'Refresh token gerekli' });
+                return;
+            }
+            const result = await this.authService.refreshAccessToken(refreshToken);
+            res.status(200).json({ success: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     // PATCH /api/auth/profile
     updateProfile = async (
         req: AuthRequest,
@@ -148,6 +167,26 @@ export class AuthController {
                 message: 'Profil güncellendi',
                 data: result,
             });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    // POST /api/auth/push-token — Expo push token kaydet
+    savePushToken = async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            const { token } = req.body;
+            if (!token || typeof token !== 'string') {
+                res.status(400).json({ success: false, message: 'Geçerli bir token gerekli' });
+                return;
+            }
+            await this.authService.savePushToken(userId, token);
+            res.status(200).json({ success: true, message: 'Push token kaydedildi' });
         } catch (error) {
             next(error);
         }

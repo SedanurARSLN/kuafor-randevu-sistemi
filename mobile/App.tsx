@@ -8,8 +8,21 @@ import {
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import { STRIPE_PUBLISHABLE_KEY, isStripePublishableKeyConfigured } from './src/config/config';
+
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+let StripeProvider: any = null;
+if (!isExpoGo) {
+  try {
+    StripeProvider = require('@stripe/stripe-react-native').StripeProvider;
+  } catch {
+    // native modül yok
+  }
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,11 +52,21 @@ export default function App() {
     return null;
   }
 
+  const content = (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
+  );
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <AuthProvider>
-        <AppNavigator />
-      </AuthProvider>
+      {StripeProvider && isStripePublishableKeyConfigured() ? (
+        <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+          {content}
+        </StripeProvider>
+      ) : (
+        content
+      )}
     </View>
   );
 }
