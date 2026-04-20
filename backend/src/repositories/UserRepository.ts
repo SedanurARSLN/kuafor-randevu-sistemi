@@ -64,4 +64,24 @@ export class UserRepository implements IUserRepository {
         const result = await pool.query(query, [id, ...values]);
         return result.rows[0] || null;
     }
+
+    async findByRefreshToken(token: string): Promise<User | null> {
+        const result = await pool.query('SELECT * FROM users WHERE refresh_token = $1', [token]);
+        return result.rows[0] || null;
+    }
+
+    async savePushToken(userId: string, token: string): Promise<void> {
+        await pool.query(
+            'UPDATE users SET expo_push_token = $1, updated_at = NOW() WHERE id = $2',
+            [token, userId]
+        );
+    }
+
+    async getPushToken(userId: string): Promise<string | null> {
+        const result = await pool.query(
+            'SELECT expo_push_token FROM users WHERE id = $1',
+            [userId]
+        );
+        return result.rows[0]?.expo_push_token ?? null;
+    }
 }

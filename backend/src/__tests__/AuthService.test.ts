@@ -25,6 +25,9 @@ function createMockRepo(overrides: Partial<IUserRepository> = {}): IUserReposito
     getProviderServices: jest.fn().mockResolvedValue([]),
     deleteById: jest.fn().mockResolvedValue(true),
     update: jest.fn().mockResolvedValue(null),
+    findByRefreshToken: jest.fn().mockResolvedValue(null),
+    savePushToken: jest.fn().mockResolvedValue(undefined),
+    getPushToken: jest.fn().mockResolvedValue(null),
     ...overrides,
   };
 }
