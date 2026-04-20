@@ -43,5 +43,6 @@ export interface AppointmentResponse {
     created_at: Date;
     customer_name?: string;
     provider_name?: string;
-    service_name?: string;
+    service_ids: string[];
+    service_names?: string[];
 }

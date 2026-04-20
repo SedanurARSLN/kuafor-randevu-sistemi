@@ -10,4 +10,7 @@ export interface IUserRepository {
     getProviderServices(providerId: string): Promise<any[]>;
     deleteById(id: string): Promise<boolean>;
     update(id: string, data: Partial<User>): Promise<User | null>;
+    findByRefreshToken(token: string): Promise<User | null>;
+    savePushToken(userId: string, token: string): Promise<void>;
+    getPushToken(userId: string): Promise<string | null>;
 }

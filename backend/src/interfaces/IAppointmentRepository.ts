@@ -4,7 +4,7 @@ export interface IAppointmentRepository {
     create(
         customerId: string,
         providerId: string,
-        serviceIds: string,
+        serviceIds: string[],
         appointmentDate: string,
         startTime: string,
         endTime: string,
