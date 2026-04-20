@@ -92,7 +92,10 @@ export class AppointmentRepository implements IAppointmentRepository {
             FROM appointments a
             WHERE a.provider_id = $1
             AND a.appointment_date = $2
-            AND a.status NOT IN ('cancelled', 'completed')
+            AND (
+                a.status IN ('pending', 'confirmed')
+                OR (a.status = 'completed' AND (a.appointment_date + a.start_time) > NOW())
+            )
             ORDER BY a.start_time ASC
         `;
         const result = await pool.query(query, [providerId, date]);
