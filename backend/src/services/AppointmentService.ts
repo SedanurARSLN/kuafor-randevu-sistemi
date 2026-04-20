@@ -1,19 +1,30 @@
 import { IAppointmentRepository } from '../interfaces/IAppointmentRepository';
 import { IServiceRepository } from '../interfaces/IServiceRepository';
+import { IUserRepository } from '../interfaces/IUserRepository';
 import { CreateAppointmentDTO, AppointmentResponse } from '../models/Appointment';
 import { AppError } from '../utils/AppError';
 import { Service } from '../models/Service';
+import { notificationService, NotificationTemplates } from './NotificationService';
 
 export class AppointmentService {
     private appointmentRepository: IAppointmentRepository;
     private serviceRepository: IServiceRepository;
+    private userRepository?: IUserRepository;
 
     constructor(
         appointmentRepository: IAppointmentRepository,
-        serviceRepository: IServiceRepository
+        serviceRepository: IServiceRepository,
+        userRepository?: IUserRepository
     ) {
         this.appointmentRepository = appointmentRepository;
         this.serviceRepository = serviceRepository;
+        this.userRepository = userRepository;
+    }
+
+    // ─── Yardımcı: userId → push token (null-safe)
+    private async getToken(userId: string): Promise<string | null> {
+        if (!this.userRepository) return null;
+        return this.userRepository.getPushToken(userId);
     }
 
     // ─── RANDEVU AL
@@ -82,7 +93,7 @@ export class AppointmentService {
         const appointment = await this.appointmentRepository.create(
             customerId,
             dto.provider_id,
-            incomingServiceIds.join(','),
+            incomingServiceIds,
             dto.appointment_date,
             dto.start_time,
             endTime,
@@ -90,6 +101,20 @@ export class AppointmentService {
             dto.notes
         );
         const detailed = await this.appointmentRepository.findById(appointment.id);
+
+        // 🔔 Kuaföre: yeni randevu bildirimi
+        try {
+            const providerToken = await this.getToken(dto.provider_id);
+            const customerName = detailed?.customer_name ?? 'Müşteri';
+            const dateStr = new Date(dto.appointment_date).toLocaleDateString('tr-TR', {
+                day: 'numeric', month: 'long',
+            });
+            const tpl = NotificationTemplates.newAppointment(customerName, dateStr, dto.start_time.slice(0, 5));
+            await notificationService.send(providerToken, tpl.title, tpl.body, {
+                screen: 'Appointments', appointmentId: appointment.id,
+            });
+        } catch { /* bildirim hatası randevu oluşturmayı engellemez */ }
+
         return detailed;
     }
 
@@ -130,7 +155,25 @@ export class AppointmentService {
         if (appointment.status !== 'pending') throw new AppError('Sadece bekleyen randevular onaylanabilir', 400);
 
         await this.appointmentRepository.updateStatus(id, 'confirmed');
-        return this.appointmentRepository.findById(id);
+        const confirmed = await this.appointmentRepository.findById(id);
+
+        // 🔔 Müşteriye: randevu onaylandı bildirimi
+        try {
+            const customerToken = await this.getToken(appointment.customer_id);
+            const dateStr = new Date(appointment.appointment_date).toLocaleDateString('tr-TR', {
+                day: 'numeric', month: 'long',
+            });
+            const tpl = NotificationTemplates.appointmentConfirmed(
+                confirmed?.provider_name ?? 'Kuaförunüz',
+                dateStr,
+                String(appointment.start_time).slice(0, 5)
+            );
+            await notificationService.send(customerToken, tpl.title, tpl.body, {
+                screen: 'Appointments', appointmentId: id,
+            });
+        } catch { /* silent */ }
+
+        return confirmed;
     }
 
     // ─── RANDEVU İPTAL
@@ -146,7 +189,38 @@ export class AppointmentService {
         if (appointment.status === 'completed') throw new AppError('Tamamlanan randevu iptal edilemez', 400);
 
         await this.appointmentRepository.updateStatus(id, 'cancelled');
-        return this.appointmentRepository.findById(id);
+        const cancelled = await this.appointmentRepository.findById(id);
+
+        // 🔔 Karşı tarafa: iptal bildirimi
+        try {
+            const dateStr = new Date(appointment.appointment_date).toLocaleDateString('tr-TR', {
+                day: 'numeric', month: 'long',
+            });
+            const timeStr = String(appointment.start_time).slice(0, 5);
+
+            // Kim iptal etti? Karşı tarafa bildir
+            if (userId === appointment.customer_id) {
+                // Müşteri iptal etti → kuaföre bildir
+                const providerToken = await this.getToken(appointment.provider_id);
+                const tpl = NotificationTemplates.appointmentCancelled(
+                    cancelled?.customer_name ?? 'Müşteri', dateStr, timeStr
+                );
+                await notificationService.send(providerToken, tpl.title, tpl.body, {
+                    screen: 'Appointments', appointmentId: id,
+                });
+            } else {
+                // Kuaför iptal etti → müşteriye bildir
+                const customerToken = await this.getToken(appointment.customer_id);
+                const tpl = NotificationTemplates.appointmentCancelled(
+                    cancelled?.provider_name ?? 'Kuaförunüz', dateStr, timeStr
+                );
+                await notificationService.send(customerToken, tpl.title, tpl.body, {
+                    screen: 'Appointments', appointmentId: id,
+                });
+            }
+        } catch { /* silent */ }
+
+        return cancelled;
     }
 
     // ─── RANDEVU TAMAMLA (kuaför)
@@ -157,7 +231,20 @@ export class AppointmentService {
         if (appointment.status !== 'confirmed') throw new AppError('Sadece onaylı randevular tamamlanabilir', 400);
 
         await this.appointmentRepository.updateStatus(id, 'completed');
-        return this.appointmentRepository.findById(id);
+        const completed = await this.appointmentRepository.findById(id);
+
+        // 🔔 Müşteriye: randevu tamamlandı bildirimi
+        try {
+            const customerToken = await this.getToken(appointment.customer_id);
+            const tpl = NotificationTemplates.appointmentCompleted(
+                completed?.provider_name ?? 'Kuaförunüz'
+            );
+            await notificationService.send(customerToken, tpl.title, tpl.body, {
+                screen: 'Appointments', appointmentId: id,
+            });
+        } catch { /* silent */ }
+
+        return completed;
     }
 
     // ─── KUAFÖR KAZANÇ İSTATİSTİKLERİ

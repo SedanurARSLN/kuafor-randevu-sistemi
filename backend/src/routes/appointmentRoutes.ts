@@ -3,6 +3,7 @@ import { AppointmentController } from '../controllers/AppointmentController';
 import { AppointmentService } from '../services/AppointmentService';
 import { AppointmentRepository } from '../repositories/AppointmentRepository';
 import { ServiceRepository } from '../repositories/ServiceRepository';
+import { UserRepository } from '../repositories/UserRepository';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { validateRequest } from '../middlewares/validateRequest';
 import { createAppointmentValidator, createPublicAppointmentValidator } from '../validators/appointmentValidator';
@@ -13,7 +14,8 @@ const router = Router();
 // ─── Dependency Injection
 const appointmentRepository = new AppointmentRepository();
 const serviceRepository = new ServiceRepository();
-const appointmentService = new AppointmentService(appointmentRepository, serviceRepository);
+const userRepository = new UserRepository();
+const appointmentService = new AppointmentService(appointmentRepository, serviceRepository, userRepository);
 const appointmentController = new AppointmentController(appointmentService);
 
 // ─── ROUTES

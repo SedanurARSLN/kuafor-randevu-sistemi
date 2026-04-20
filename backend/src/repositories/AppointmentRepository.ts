@@ -7,36 +7,57 @@ export class AppointmentRepository implements IAppointmentRepository {
     async create(
         customerId: string,
         providerId: string,
-        serviceIds: string,
+        serviceIds: string[],
         appointmentDate: string,
         startTime: string,
         endTime: string,
         totalPrice: number,
         notes?: string
     ): Promise<Appointment> {
-        const query = `
-            INSERT INTO appointments 
-            (customer_id, provider_id, service_id, appointment_date, start_time, end_time, total_price, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING *
-        `;
-        const values = [customerId, providerId, serviceIds, appointmentDate, startTime, endTime, totalPrice, notes || null];
-        const result = await pool.query(query, values);
-        return result.rows[0];
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const apptResult = await client.query(
+                `INSERT INTO appointments
+                 (customer_id, provider_id, appointment_date, start_time, end_time, total_price, notes)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 RETURNING *`,
+                [customerId, providerId, appointmentDate, startTime, endTime, totalPrice, notes || null]
+            );
+            const appointment = apptResult.rows[0];
+
+            for (const serviceId of serviceIds) {
+                await client.query(
+                    `INSERT INTO appointment_services (appointment_id, service_id) VALUES ($1, $2)`,
+                    [appointment.id, serviceId]
+                );
+            }
+
+            await client.query('COMMIT');
+            return appointment;
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
     }
 
     async findById(id: string): Promise<any | null> {
         const query = `
-            SELECT 
+            SELECT
                 a.*,
-                c.full_name as customer_name,
-                p.full_name as provider_name,
-                array_agg(s.name) as service_names,
-                array_agg(s.price) as service_prices
+                c.full_name  AS customer_name,
+                p.full_name  AS provider_name,
+                array_agg(s.id::text)  AS service_ids,
+                array_agg(s.name)      AS service_names,
+                array_agg(s.price)     AS service_prices
             FROM appointments a
             JOIN users c ON a.customer_id = c.id
             JOIN users p ON a.provider_id = p.id
-            JOIN services s ON s.id = ANY(string_to_array(a.service_id::text, ',')::uuid[])
+            JOIN appointment_services aps ON aps.appointment_id = a.id
+            JOIN services s ON s.id = aps.service_id
             WHERE a.id = $1
             GROUP BY a.id, c.full_name, p.full_name
         `;
@@ -46,14 +67,16 @@ export class AppointmentRepository implements IAppointmentRepository {
 
     async findByCustomerId(customerId: string): Promise<any[]> {
         const query = `
-            SELECT 
+            SELECT
                 a.*,
-                p.full_name as provider_name,
-                array_agg(s.name) as service_names,
-                array_agg(s.price) as service_prices
+                p.full_name             AS provider_name,
+                array_agg(s.id::text)   AS service_ids,
+                array_agg(s.name)       AS service_names,
+                array_agg(s.price)      AS service_prices
             FROM appointments a
             JOIN users p ON a.provider_id = p.id
-            JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
+            JOIN appointment_services aps ON aps.appointment_id = a.id
+            JOIN services s ON s.id = aps.service_id
             WHERE a.customer_id = $1
             GROUP BY a.id, p.full_name
             ORDER BY a.appointment_date DESC, a.start_time DESC
@@ -69,7 +92,7 @@ export class AppointmentRepository implements IAppointmentRepository {
             FROM appointments a
             WHERE a.provider_id = $1
             AND a.appointment_date = $2
-            AND a.status NOT IN ('cancelled')
+            AND a.status NOT IN ('cancelled', 'completed')
             ORDER BY a.start_time ASC
         `;
         const result = await pool.query(query, [providerId, date]);
@@ -78,14 +101,16 @@ export class AppointmentRepository implements IAppointmentRepository {
 
     async findByProviderId(providerId: string): Promise<any[]> {
         const query = `
-            SELECT 
+            SELECT
                 a.*,
-                c.full_name as customer_name,
-                array_agg(s.name) as service_names,
-                array_agg(s.price) as service_prices
+                c.full_name             AS customer_name,
+                array_agg(s.id::text)   AS service_ids,
+                array_agg(s.name)       AS service_names,
+                array_agg(s.price)      AS service_prices
             FROM appointments a
             JOIN users c ON a.customer_id = c.id
-            JOIN services s ON s.id = ANY(string_to_array(a.service_id, ',')::uuid[])
+            JOIN appointment_services aps ON aps.appointment_id = a.id
+            JOIN services s ON s.id = aps.service_id
             WHERE a.provider_id = $1
             GROUP BY a.id, c.full_name
             ORDER BY a.appointment_date ASC, a.start_time ASC
