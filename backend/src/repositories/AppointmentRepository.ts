@@ -129,7 +129,10 @@ export class AppointmentRepository implements IAppointmentRepository {
             SELECT * FROM appointments
             WHERE provider_id = $1
             AND appointment_date = $2
-            AND status NOT IN ('cancelled', 'completed')
+            AND (
+                status IN ('pending', 'confirmed')
+                OR (status = 'completed' AND (appointment_date + start_time) > NOW())
+            )
             AND start_time < $4::time
             AND end_time > $3::time
         `;
